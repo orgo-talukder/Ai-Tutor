@@ -1,0 +1,122 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile and settings information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "description": "User email address" },
+        "displayName": { "type": "string", "description": "User display name" },
+        "photoURL": { "type": "string", "description": "Profile picture URL" },
+        "preferredLanguage": { "type": "string", "enum": ["en", "bn"], "description": "Preferred learning language" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "ChatSession": {
+      "title": "Chat Session",
+      "description": "Learning chat conversation thread",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Chat session ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "title": { "type": "string", "maxLength": 200 },
+        "subject": { "type": "string", "maxLength": 100 },
+        "mode": { "type": "string", "maxLength": 50 },
+        "language": { "type": "string", "enum": ["en", "bn"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "Individual message within a chat session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "chatId": { "type": "string" },
+        "userId": { "type": "string" },
+        "sender": { "type": "string", "enum": ["user", "assistant"] },
+        "text": { "type": "string", "maxLength": 10000 },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "chatId", "userId", "sender", "text"]
+    },
+    "NotebookNote": {
+      "title": "Notebook Note",
+      "description": "Learning recap and concept note",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "content": { "type": "string", "maxLength": 10000 },
+        "subject": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["mastered", "review_needed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "content"]
+    },
+    "QuizResult": {
+      "title": "Quiz Result",
+      "description": "Diagnostic quiz assessment record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subject": { "type": "string" },
+        "score": { "type": "number" },
+        "total": { "type": "number" },
+        "summary": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "subject", "score"]
+    },
+    "TutorSetting": {
+      "title": "Tutor Settings & Config",
+      "description": "System instructions and modes formatting configurations stored on Firestore",
+      "type": "object",
+      "properties": {
+        "settingId": { "type": "string" },
+        "systemInstruction": { "type": "string", "maxLength": 10000 },
+        "socraticTemplate": { "type": "string", "maxLength": 5000 },
+        "workedSolutionTemplate": { "type": "string", "maxLength": 5000 },
+        "checkAnswerTemplate": { "type": "string", "maxLength": 5000 },
+        "simplifyTemplate": { "type": "string", "maxLength": 5000 },
+        "teachBackTemplate": { "type": "string", "maxLength": 5000 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["settingId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile details"
+    },
+    "/chats/{chatId}": {
+      "schema": "ChatSession",
+      "description": "User learning chat sessions"
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Messages inside a chat session"
+    },
+    "/notebooks/{noteId}": {
+      "schema": "NotebookNote",
+      "description": "Saved notes and summaries in notebook"
+    },
+    "/quizzes/{quizId}": {
+      "schema": "QuizResult",
+      "description": "Diagnostic quiz attempt records"
+    },
+    "/tutor_settings/{settingId}": {
+      "schema": "TutorSetting",
+      "description": "System instructions and custom teaching mode templates"
+    }
+  }
+}

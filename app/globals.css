@@ -1,0 +1,269 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Tailwind CSS v4 custom dark selector matching data-theme and .dark */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
+/* Central AI Tutor Theme Tokens */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif;
+  color-scheme: dark;
+  --bg-canvas: #0A0A0B;
+  --surface: #121215;
+  --surface-elevated: #18181C;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --text-primary: #F5F5F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+  --accent: #7C8CFF;
+}
+
+[data-theme="light"],
+html.light {
+  color-scheme: light;
+  --bg-canvas: #FFFFFF;
+  --surface: #F8F9FA;
+  --surface-elevated: #FFFFFF;
+  --border: #E4E4E7;
+  --border-hover: #D4D4D8;
+  --text-primary: #18181B;
+  --text-secondary: #52525B;
+  --text-muted: #71717A;
+  --accent: #4F46E5;
+}
+
+[data-theme="dark"],
+html.dark {
+  color-scheme: dark;
+  --bg-canvas: #0A0A0B;
+  --surface: #121215;
+  --surface-elevated: #18181C;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --text-primary: #F5F5F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+  --accent: #7C8CFF;
+}
+
+/* Global Reset & Viewport Constraints */
+html,
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  min-height: 100%;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+/* Mobile Safe Area and Viewport Height */
+.app-viewport {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Hide scrollbar for compact horizontal control trays */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.35);
+}
+
+/* Conversational Markdown Body */
+.markdown-body {
+  word-break: break-word;
+  line-height: 1.75;
+  font-size: 0.95rem;
+}
+
+.markdown-body p {
+  margin-bottom: 0.85rem;
+}
+
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: inherit;
+}
+
+.markdown-body h1 {
+  font-size: 1.25rem;
+}
+
+.markdown-body h2 {
+  font-size: 1.15rem;
+}
+
+.markdown-body h3 {
+  font-size: 1.05rem;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.85rem;
+  padding-left: 1.25rem;
+}
+
+.markdown-body ul {
+  list-style-type: disc;
+}
+
+.markdown-body ol {
+  list-style-type: decimal;
+}
+
+.markdown-body li {
+  margin-bottom: 0.3rem;
+}
+
+.markdown-body code:not(pre code) {
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.375rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+  background-color: rgba(128, 128, 128, 0.12);
+  border: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.markdown-body pre {
+  margin-top: 0.85rem;
+  margin-bottom: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.markdown-body blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.85rem;
+  margin: 0.85rem 0;
+  color: var(--text-secondary);
+  font-style: normal;
+}
+
+.markdown-body table {
+  width: 100%;
+  margin: 0.85rem 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.markdown-body th {
+  background-color: rgba(128, 128, 128, 0.08);
+  font-weight: 600;
+}
+
+/* KaTeX Formula Display */
+.katex-display {
+  margin: 0.75rem 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.65rem 0.85rem !important;
+  background-color: rgba(128, 128, 128, 0.06);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.katex {
+  font-size: 1.05em;
+  text-rendering: auto;
+}
+
+/* AI Premium Thinking Animation Utilities */
+@keyframes aiPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(124, 140, 255, 0.3), 0 0 24px rgba(147, 51, 234, 0.2);
+    border-color: rgba(124, 140, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(124, 140, 255, 0.6), 0 0 35px rgba(236, 72, 153, 0.3);
+    border-color: rgba(168, 85, 247, 0.6);
+  }
+}
+
+@keyframes aiSpinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes aiShimmerFlow {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-ai-glow {
+  animation: aiPulseGlow 3s infinite ease-in-out;
+}
+
+.animate-spin-slow {
+  animation: aiSpinSlow 8s linear infinite;
+}
+
+.animate-shimmer-text {
+  background: linear-gradient(90deg, #7C8CFF 0%, #A855F7 25%, #EC4899 50%, #A855F7 75%, #7C8CFF 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: aiShimmerFlow 3s linear infinite;
+}
+
+.animate-shimmer-bg {
+  background: linear-gradient(90deg, rgba(124,140,255,0.06) 0%, rgba(168,85,247,0.2) 50%, rgba(124,140,255,0.06) 100%);
+  background-size: 200% 100%;
+  animation: aiShimmerFlow 2.5s ease-in-out infinite;
+}

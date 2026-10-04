@@ -1,0 +1,6 @@
+{
+  "name": "ThinkWise AI — Interactive Learning Companion",
+  "description": "An adaptive, understanding-first educational AI tutor for STEM and humanities, offering bilingual Socratic explanations, misconception diagnosis, worked solutions, and interactive practice.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
