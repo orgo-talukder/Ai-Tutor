@@ -14,17 +14,12 @@ export const ai = new GoogleGenAI({
   },
 });
 
-export const DEFAULT_MODEL: GeminiModelId = 'gemini-3.8-flash';
+export const DEFAULT_MODEL: GeminiModelId = 'gemini-2.5-flash';
 
-// Multi-tier resilient fallback cascade list
+// Multi-tier resilient fallback cascade list restricted to fast/pro models
 export const FALLBACK_CASCADE: GeminiModelId[] = [
-  'gemini-3.8-flash',
-  'gemini-3.7-flash',
-  'gemini-3.6-flash',
-  'gemini-3.5-flash-lite',
-  'gemini-3.1-pro-preview',
-  'gemini-3.1-flash-preview',
   'gemini-2.5-flash',
+  'gemini-3.7-flash',
 ];
 
 // Track temporarily degraded or quota-exhausted models
@@ -45,8 +40,6 @@ function buildThinkingConfig(model: string, level: ThinkingLevelId = 'medium') {
 
   if (isGemini25) {
     switch (level) {
-      case 'off':
-        return { thinkingBudget: 0 };
       case 'low':
         return { thinkingBudget: 1024 };
       case 'high':
@@ -59,8 +52,6 @@ function buildThinkingConfig(model: string, level: ThinkingLevelId = 'medium') {
 
   // Gemini 3 series
   switch (level) {
-    case 'off':
-      return { thinkingLevel: ThinkingLevel.MINIMAL };
     case 'low':
       return { thinkingLevel: ThinkingLevel.LOW };
     case 'high':

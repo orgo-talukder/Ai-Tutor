@@ -23,7 +23,7 @@ export function ClaudeModelBottomSheet({
   selectedThinkingLevel,
   onSelectThinkingLevel,
 }: ClaudeModelBottomSheetProps) {
-  const [currentView, setCurrentView] = useState<'main' | 'effort' | 'more'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'effort'>('main');
   const isBn = language === 'bn';
 
   if (!isOpen) return null;
@@ -37,59 +37,20 @@ export function ClaudeModelBottomSheet({
     descBn: string;
   }[] = [
     {
-      id: 'gemini-3.8-flash',
-      title: 'Gemini 3.8 Flash',
-      badge: isBn ? 'ডিফল্ট' : 'Default',
-      badgeColor: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20',
-      descEn: 'Flagship Flash for deep pedagogical reasoning & fast replies',
-      descBn: 'প্রধান ফ্ল্যাশ মডেল · গভীর শিক্ষাদান ও দ্রুত রেসপন্স',
+      id: 'gemini-2.5-flash',
+      title: 'ThinkWase Fast',
+      badge: 'Fast',
+      badgeColor: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+      descEn: 'Fast, capable responses for everyday learning.',
+      descBn: 'প্রতিদিনের পড়াশোনার জন্য দ্রুত এবং কার্যকর রেসপন্স।',
     },
     {
       id: 'gemini-3.7-flash',
-      title: 'Gemini 3.7 Flash',
-      badge: 'Hybrid',
-      badgeColor: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20',
-      descEn: 'Hybrid reasoning with adjustable thinking depth',
-      descBn: 'হাইব্রিড চিন্তন ক্ষমতা ও সামঞ্জস্যপূর্ণ রিজনিং',
-    },
-    {
-      id: 'gemini-3.6-flash',
-      title: 'Gemini 3.6 Flash',
-      badge: 'Fast',
-      badgeColor: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
-      descEn: 'Balanced reasoning for STEM & math calculations',
-      descBn: 'বিজ্ঞান ও গণিতের দ্রুত যৌক্তিক সমাধান',
-    },
-    {
-      id: 'gemini-3.1-pro-preview',
-      title: 'Gemini 3.1 Pro',
+      title: 'ThinkWase Pro',
       badge: 'Pro',
-      badgeColor: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20',
-      descEn: 'Advanced multi-step reasoning for university STEM & proofs',
-      descBn: 'উচ্চতর গণিত ও বিজ্ঞান গবেষণার জন্য প্রো মডেল',
-    },
-  ];
-
-  const moreModels: {
-    id: GeminiModelId;
-    title: string;
-    badge?: string;
-    descEn: string;
-    descBn: string;
-  }[] = [
-    {
-      id: 'gemini-3.1-flash-preview',
-      title: 'Gemini 3.1 Flash',
-      badge: 'Preview',
-      descEn: 'Next-gen ultra low latency flash preview',
-      descBn: 'পরবর্তী প্রজন্মের দ্রুত প্রিভিউ মডেল',
-    },
-    {
-      id: 'gemini-2.5-flash',
-      title: 'Gemini 2.5 Flash',
-      badge: '2.5 Flash',
-      descEn: 'Token-budget thinking for lightweight tutoring',
-      descBn: 'টোকেন বাজেট থিংকিং সহ দ্রুত রেসপন্স',
+      badgeColor: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20',
+      descEn: 'Deeper reasoning for complex learning and problem solving.',
+      descBn: 'জটিল পড়াশোনা ও সমস্যা সমাধানের জন্য গভীর চিন্তন ও লজিক।',
     },
   ];
 
@@ -122,13 +83,6 @@ export function ClaudeModelBottomSheet({
       labelBn: 'High (উচ্চ)',
       descEn: 'Deep step-by-step logic for complex math & STEM',
       descBn: 'গভীর গাণিতিক প্রমাণ ও জটিল যুক্তি',
-    },
-    {
-      id: 'off',
-      labelEn: 'Off',
-      labelBn: 'Off (বন্ধ)',
-      descEn: 'Direct response without internal thinking step',
-      descBn: 'অভ্যন্তরীণ চিন্তন ছাড়া সরাসরি উত্তর',
     },
   ];
 
@@ -214,7 +168,7 @@ export function ClaudeModelBottomSheet({
               })}
             </div>
 
-            {/* Secondary Rows: Effort & More Models (Claude style) */}
+            {/* Secondary Rows: Effort */}
             <div className="bg-zinc-50 dark:bg-[#1A1A1D] border border-zinc-200/80 dark:border-white/[0.08] rounded-2xl overflow-hidden divide-y divide-zinc-200/80 dark:divide-white/[0.06]">
               {/* Effort / Thinking Level Row */}
               <button
@@ -231,18 +185,6 @@ export function ClaudeModelBottomSheet({
                   </span>
                   <ChevronRight className="w-4 h-4 text-zinc-400" />
                 </div>
-              </button>
-
-              {/* More Models Row */}
-              <button
-                type="button"
-                onClick={() => setCurrentView('more')}
-                className="w-full p-3.5 flex items-center justify-between text-left hover:bg-zinc-100/50 dark:hover:bg-white/[0.03] transition-colors cursor-pointer"
-              >
-                <div className="text-sm font-medium text-zinc-900 dark:text-white">
-                  {isBn ? 'আরও মডেল দেখুন' : 'More models'}
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-400" />
               </button>
             </div>
           </div>
@@ -315,68 +257,6 @@ export function ClaudeModelBottomSheet({
                 ? 'উচ্চ চিন্তন গভীরতায় মডেলটি সমস্যার প্রতিটি ধাপ পুঙ্খানুপুঙ্খভাবে চিন্তা করে উত্তর প্রদান করে।'
                 : 'Higher effort means more thorough responses and deeper step-by-step logic.'}
             </p>
-          </div>
-        )}
-
-        {/* VIEW 3: MORE MODELS SUB-SHEET */}
-        {currentView === 'more' && (
-          <div className="p-4 sm:p-5 space-y-3.5 overflow-y-auto animate-fadeIn">
-            {/* Header with Back Button */}
-            <div className="flex items-center justify-between relative pb-1">
-              <button
-                type="button"
-                onClick={() => setCurrentView('main')}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
-                aria-label="Back"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h2 className="text-[15px] font-semibold text-zinc-900 dark:text-white tracking-tight absolute left-1/2 -translate-x-1/2">
-                {isBn ? 'অন্যান্য মডেল' : 'More models'}
-              </h2>
-              <div className="w-8" />
-            </div>
-
-            <div className="bg-zinc-50 dark:bg-[#1A1A1D] border border-zinc-200/80 dark:border-white/[0.08] rounded-2xl overflow-hidden divide-y divide-zinc-200/80 dark:divide-white/[0.06]">
-              {moreModels.map((m) => {
-                const isSelected = selectedModel === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => {
-                      onSelectModel(m.id);
-                      onClose();
-                    }}
-                    className={`w-full p-3.5 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                      isSelected
-                        ? 'bg-zinc-100/80 dark:bg-white/[0.06]'
-                        : 'hover:bg-zinc-100/50 dark:hover:bg-white/[0.03]'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-zinc-900 dark:text-white">
-                          {m.title}
-                        </span>
-                        {m.badge && (
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-zinc-200 text-zinc-700 dark:bg-white/[0.08] dark:text-zinc-300">
-                            {m.badge}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">
-                        {isBn ? m.descBn : m.descEn}
-                      </p>
-                    </div>
-
-                    {isSelected && (
-                      <Check className="w-5 h-5 text-indigo-600 dark:text-[#7C8CFF] shrink-0 stroke-[2.5]" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
           </div>
         )}
       </div>

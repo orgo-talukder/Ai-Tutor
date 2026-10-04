@@ -1,7 +1,7 @@
 'use client';
 
 import { useSyncExternalStore, useCallback } from 'react';
-import { AcademicLevel, AppLanguage, SubjectArea, TeachingMode } from './types';
+import { AcademicLevel, AppLanguage, SubjectArea, TeachingMode, GeminiModelId, ThinkingLevelId } from './types';
 
 export type ThemePreference = 'dark' | 'light' | 'system';
 export type ResponseLanguagePreference = 'auto' | 'bn' | 'en';
@@ -44,6 +44,11 @@ export interface AppSettings {
 
   // General
   confirmBeforeClearSession: boolean;
+
+  // Persistent Model Preferences
+  selectedModel: GeminiModelId;
+  fastThinkingLevel: ThinkingLevelId;
+  proThinkingLevel: ThinkingLevelId;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -68,6 +73,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   reduceMotion: false,
   highContrast: false,
   confirmBeforeClearSession: true,
+  selectedModel: 'gemini-2.5-flash',
+  fastThinkingLevel: 'medium',
+  proThinkingLevel: 'medium',
 };
 
 const SETTINGS_STORAGE_KEY = 'ai_tutor_app_settings_v1';

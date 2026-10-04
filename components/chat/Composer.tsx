@@ -25,12 +25,17 @@ import {
 import { AttachmentPreviewChips } from './AttachmentPreviewChips';
 import { FileQuickActions } from './FileQuickActions';
 import { ComposerAttachmentMenu } from './popovers/ComposerAttachmentMenu';
-import { TeachingModePopover } from './popovers/TeachingModePopover';
 import { ModelPickerPopover } from './popovers/ModelPickerPopover';
 import {
   MAX_FILES_PER_MESSAGE,
   validateFile,
 } from '@/lib/constants/attachments';
+
+// @Mention System imports
+import { MentionDefinition, MENTION_DEFINITIONS } from '@/lib/mentions/definitions';
+import { MentionMenu } from './MentionMenu';
+import { MentionChip } from './MentionChip';
+import { AnimatedComposerPlaceholder } from './AnimatedComposerPlaceholder';
 
 interface SpeechRecognitionEventInstance {
   resultIndex: number;
@@ -64,11 +69,11 @@ interface ComposerProps {
   selectedThinkingLevel: ThinkingLevelId;
   onThinkingLevelChange: (level: ThinkingLevelId) => void;
   isStreaming: boolean;
-  onSendMessage: (text: string, attachments?: AttachmentFile[]) => void;
+  onSendMessage: (text: string, attachments?: AttachmentFile[], mentions?: MentionDefinition[]) => void;
   onStopStreaming: () => void;
 }
 
-type ActivePopoverType = 'attachments' | 'mode' | 'model' | null;
+type ActivePopoverType = 'attachments' | 'model' | null;
 
 export function Composer({
   language,
@@ -88,6 +93,12 @@ export function Composer({
   const [isDragging, setIsDragging] = useState(false);
   const [isListening, setIsListening] = useState(false);
 
+  // @Mention state
+  const [selectedMentions, setSelectedMentions] = useState<MentionDefinition[]>([]);
+  const [isMentionMenuOpen, setIsMentionMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
@@ -98,7 +109,7 @@ export function Composer({
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   const isBn = language === 'bn';
-  const hasContentToSend = input.trim().length > 0 || attachments.length > 0;
+  const hasContentToSend = input.trim().length > 0 || attachments.length > 0 || selectedMentions.length > 0;
 
   // Auto-resize textarea
   useEffect(() => {
@@ -107,6 +118,82 @@ export function Composer({
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 140)}px`;
     }
   }, [input]);
+
+  // Handle @Mention trigger detection on input change
+  const checkMentionTrigger = (text: string, selectionStart: number) => {
+    const textBeforeCursor = text.slice(0, selectionStart);
+    const lastAtIdx = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIdx !== -1) {
+      // Ensure there is whitespace or start-of-line before '@' to avoid emails or random triggers
+      const charBeforeAt = lastAtIdx > 0 ? textBeforeCursor[lastAtIdx - 1] : ' ';
+      if (charBeforeAt === ' ' || charBeforeAt === '\n') {
+        const query = textBeforeCursor.slice(lastAtIdx + 1);
+        if (!query.includes(' ')) {
+          setSearchQuery(query);
+          setIsMentionMenuOpen(true);
+          return;
+        }
+      }
+    }
+
+    setIsMentionMenuOpen(false);
+    setSearchQuery('');
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+    checkMentionTrigger(value, e.target.selectionStart || 0);
+  };
+
+  const handleTextareaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    checkMentionTrigger(textarea.value, textarea.selectionStart || 0);
+  };
+
+  // Select mention and convert into a chip
+  const handleSelectMention = (mention: MentionDefinition) => {
+    if (!selectedMentions.some((m) => m.id === mention.id)) {
+      setSelectedMentions((prev) => [...prev, mention]);
+    }
+
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const selectionStart = textarea.selectionStart;
+      const textBeforeCursor = input.slice(0, selectionStart);
+      const textAfterCursor = input.slice(selectionStart);
+      const lastAtIdx = textBeforeCursor.lastIndexOf('@');
+
+      if (lastAtIdx !== -1) {
+        const newInput = textBeforeCursor.slice(0, lastAtIdx) + textAfterCursor;
+        setInput(newInput);
+
+        setTimeout(() => {
+          textarea.focus();
+          textarea.selectionStart = lastAtIdx;
+          textarea.selectionEnd = lastAtIdx;
+        }, 10);
+      }
+    }
+
+    setIsMentionMenuOpen(false);
+    setSearchQuery('');
+    setHighlightedIndex(0);
+  };
+
+  const handleRemoveMention = (mentionId: string) => {
+    setSelectedMentions((prev) => prev.filter((m) => m.id !== mentionId));
+  };
+
+  // Filter mentions list based on active autocomplete query
+  const filteredMentions = MENTION_DEFINITIONS.filter((m) =>
+    m.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Sync highlighted index limit dynamically
+  const safeHighlightedIndex = highlightedIndex >= filteredMentions.length ? 0 : highlightedIndex;
 
   // Voice Speech Recognition Handler (Web Speech API)
   const toggleListening = () => {
@@ -142,7 +229,11 @@ export function Composer({
         for (let i = event.resultIndex; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript;
         }
-        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        setInput((prev) => {
+          const updated = prev ? `${prev} ${transcript}` : transcript;
+          checkMentionTrigger(updated, updated.length);
+          return updated;
+        });
       };
 
       recognition.onerror = () => {
@@ -188,7 +279,6 @@ export function Composer({
           const errJson = await res.json();
           if (errJson?.error) errMsg = errJson.error;
         } catch {
-          // If response is HTML, grab the plain-text/error content safely
           try {
             const errText = await res.text();
             if (errText && errText.length < 150) {
@@ -348,19 +438,45 @@ export function Composer({
       return;
     }
 
-    if (!trimmed && attachments.length === 0) return;
+    if (!trimmed && attachments.length === 0 && selectedMentions.length === 0) return;
 
     const readyAttachments = attachments.filter((a) => a.state === 'ready');
-    onSendMessage(trimmed, readyAttachments.length > 0 ? readyAttachments : undefined);
+    onSendMessage(trimmed, readyAttachments.length > 0 ? readyAttachments : undefined, selectedMentions);
 
     setInput('');
     setAttachments([]);
+    setSelectedMentions([]);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isMentionMenuOpen) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev + 1) % Math.max(1, filteredMentions.length));
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev - 1 + filteredMentions.length) % Math.max(1, filteredMentions.length));
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (filteredMentions[safeHighlightedIndex]) {
+          handleSelectMention(filteredMentions[safeHighlightedIndex]);
+        }
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsMentionMenuOpen(false);
+        return;
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
@@ -401,21 +517,17 @@ export function Composer({
   };
 
   const modelShortLabels: Record<GeminiModelId, string> = {
-    'gemini-3.8-flash': '3.8 Flash',
-    'gemini-3.7-flash': '3.7 Flash',
-    'gemini-3.6-flash': '3.6 Flash',
-    'gemini-3.5-flash-lite': '3.5 Lite',
-    'gemini-3.1-pro-preview': '3.1 Pro',
-    'gemini-3.1-flash-preview': '3.1 Flash',
-    'gemini-2.5-flash': '2.5 Flash',
+    'gemini-2.5-flash': 'ThinkWase Fast',
+    'gemini-3.7-flash': 'ThinkWase Pro',
   };
 
   const effortLabels: Record<ThinkingLevelId, { en: string; bn: string }> = {
     low: { en: 'Low', bn: 'কম' },
     medium: { en: 'Medium', bn: 'মাঝারি' },
     high: { en: 'High', bn: 'বেশি' },
-    off: { en: 'Off', bn: 'বন্ধ' },
   };
+
+  const showPlaceholder = input.length === 0 && selectedMentions.length === 0;
 
   return (
     <div className="w-full max-w-[760px] mx-auto px-2.5 sm:px-4 pb-3 sm:pb-5">
@@ -486,12 +598,38 @@ export function Composer({
           </div>
         )}
 
+        {/* Autocomplete @Mention suggestions menu */}
+        <MentionMenu
+          isOpen={isMentionMenuOpen}
+          onClose={() => setIsMentionMenuOpen(false)}
+          onSelectMention={handleSelectMention}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          highlightedIndex={safeHighlightedIndex}
+          onHighlightedIndexChange={setHighlightedIndex}
+          filteredMentions={filteredMentions}
+          isBn={isBn}
+        />
+
         {/* Attachment Previews */}
         <AttachmentPreviewChips
           attachments={attachments}
           onRemoveAttachment={handleRemoveAttachment}
           isBn={isBn}
         />
+
+        {/* Mention Chips layout */}
+        {selectedMentions.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 px-1 pb-1.5 border-b border-zinc-100 dark:border-white/[0.04] mb-1.5">
+            {selectedMentions.map((mention) => (
+              <MentionChip
+                key={mention.id}
+                mention={mention}
+                onRemove={() => handleRemoveMention(mention.id)}
+              />
+            ))}
+          </div>
+        )}
 
         {/* File Quick Actions */}
         <FileQuickActions
@@ -503,32 +641,28 @@ export function Composer({
           isBn={isBn}
         />
 
-        {/* Text Input Row */}
-        <div className="flex items-start px-1 pt-0.5">
+        {/* Text Input Row with Animated Placeholder */}
+        <div className="flex items-start relative min-h-[44px]">
+          <AnimatedComposerPlaceholder
+            isBn={isBn}
+            isVisible={showPlaceholder}
+          />
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
+            onClick={handleTextareaClick}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             rows={1}
-            placeholder={
-              attachments.length > 0
-                ? isBn
-                  ? 'সংযুক্ত ফাইল সম্পর্কে প্রশ্ন লিখুন...'
-                  : 'Ask about attached materials...'
-                : isBn
-                ? 'থিঙ্কওয়াইজ এআই-কে যেকোনো কিছু জিজ্ঞাসা করুন...'
-                : 'Ask ThinkWise AI anything...'
-            }
-            className="w-full resize-none bg-transparent text-sm sm:text-[15px] text-zinc-900 dark:text-[#F5F5F5] placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none min-h-[44px] max-h-36 leading-relaxed"
+            className="w-full resize-none bg-transparent text-sm sm:text-[15px] text-zinc-900 dark:text-[#F5F5F5] focus:outline-none pt-[12px] pb-[12px] pl-[10px] pr-[10px] min-h-[44px] max-h-36 leading-relaxed z-10"
           />
         </div>
 
         {/* Bottom Controls Row: [+] | [Socratic ▾] | [Gemini 3.8 Flash · Medium ▾] | [🎙 / ↑] */}
-        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-zinc-100 dark:border-white/[0.05] gap-2 overflow-visible">
+        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-zinc-100 dark:border-white/[0.05] gap-1 sm:gap-3 overflow-visible">
           {/* Left: Flex controls container with overflow-visible to prevent clipping popovers */}
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 py-0.5 pr-1 overflow-visible z-30">
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1 py-0.5 pr-2 overflow-visible z-30">
             {/* 1. [+] Attachment Button & Popover */}
             <div className="relative inline-flex items-center shrink-0">
               <button
@@ -563,40 +697,6 @@ export function Composer({
               />
             </div>
 
-            {/* 2. Control 1: [Socratic Tutor ▾] TeachingModePopover */}
-            <div className="relative inline-flex items-center shrink-0">
-              <button
-                type="button"
-                aria-haspopup="menu"
-                aria-expanded={activePopover === 'mode'}
-                aria-label={isBn ? 'টিচিং মোড নির্বাচন' : 'Select teaching mode'}
-                title={isBn ? 'টিচিং মোড পরিবর্তন' : 'Select teaching mode'}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActivePopover((prev) => (prev === 'mode' ? null : 'mode'));
-                }}
-                className={`h-8 px-2.5 sm:px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 ${
-                  activePopover === 'mode'
-                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-black border-transparent shadow-xs'
-                    : 'bg-zinc-100 dark:bg-white/[0.05] hover:bg-zinc-200 dark:hover:bg-white/[0.09] border-zinc-200/80 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-              >
-                {modeLabels[currentMode]?.icon}
-                <span className="truncate max-w-[85px] sm:max-w-[130px]">
-                  {isBn ? modeLabels[currentMode]?.bn : modeLabels[currentMode]?.en}
-                </span>
-                <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
-              </button>
-
-              <TeachingModePopover
-                isOpen={activePopover === 'mode'}
-                onClose={() => setActivePopover(null)}
-                language={language}
-                currentMode={currentMode}
-                onSelectMode={onModeChange}
-              />
-            </div>
-
             {/* 3. Control 2: [Gemini 3.8 Flash · Medium ▾] ModelPickerPopover */}
             <div className="relative inline-flex items-center shrink-0">
               <button
@@ -609,14 +709,14 @@ export function Composer({
                   e.stopPropagation();
                   setActivePopover((prev) => (prev === 'model' ? null : 'model'));
                 }}
-                className={`h-8 px-2.5 sm:px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                className={`h-8 px-2 sm:px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer shrink-0 ${
                   activePopover === 'model'
                     ? 'bg-zinc-900 text-white dark:bg-white dark:text-black border-transparent shadow-xs'
                     : 'bg-zinc-100 dark:bg-white/[0.05] hover:bg-zinc-200 dark:hover:bg-white/[0.09] border-zinc-200/80 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
                 }`}
               >
-                <span className="font-mono font-semibold truncate max-w-[70px] sm:max-w-none">
-                  {modelShortLabels[selectedModel] || '3.8 Flash'}
+                <span className="font-mono font-semibold truncate max-w-[110px] sm:max-w-none">
+                  {modelShortLabels[selectedModel] || 'ThinkWase Fast'}
                 </span>
                 <span className="opacity-70 font-normal hidden sm:inline truncate max-w-[50px] sm:max-w-none">
                   {isBn ? effortLabels[selectedThinkingLevel]?.bn : effortLabels[selectedThinkingLevel]?.en}
@@ -637,7 +737,7 @@ export function Composer({
           </div>
 
           {/* Right: Dynamic Mic / Send Button with clean separator line */}
-          <div className="shrink-0 flex items-center pl-1 sm:pl-2 border-l border-zinc-200/60 dark:border-white/[0.08]">
+          <div className="shrink-0 flex items-center pl-2.5 sm:pl-3 border-l border-zinc-200/60 dark:border-white/[0.08]">
             {isStreaming ? (
               <button
                 type="button"

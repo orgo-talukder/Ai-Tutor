@@ -27,8 +27,8 @@ interface AppSidebarProps {
   language: AppLanguage;
   onNewChat: () => void;
   onClearSession: () => void;
-  onOpenTool: (tool: 'quiz' | 'teach_back' | 'scratchpad') => void;
-  activeTool: 'quiz' | 'teach_back' | 'scratchpad' | null;
+  onOpenTool: (tool: 'quiz' | 'teach_back' | 'scratchpad' | 'canvas') => void;
+  activeTool: 'quiz' | 'teach_back' | 'scratchpad' | 'canvas' | null;
   savedNotesCount: number;
   messageCount: number;
   onOpenAbout: () => void;

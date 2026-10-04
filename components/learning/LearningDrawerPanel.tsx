@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLanguage, QuizQuestion, SavedNote, SubjectArea, TeachBackAssessment } from '@/lib/types';
 import {
   X,
@@ -20,14 +20,21 @@ import {
   Loader2,
   BookOpen,
   Lightbulb,
+  Edit3,
+  Layers,
+  FileText,
+  FileCheck2,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 interface LearningDrawerPanelProps {
   isOpen: boolean;
   onClose: () => void;
   language: AppLanguage;
-  activeTab: 'quiz' | 'teach_back' | 'scratchpad';
-  onTabChange: (tab: 'quiz' | 'teach_back' | 'scratchpad') => void;
+  activeTab: 'quiz' | 'teach_back' | 'scratchpad' | 'canvas';
+  onTabChange: (tab: 'quiz' | 'teach_back' | 'scratchpad' | 'canvas') => void;
   // Quiz Props
   quizTopic: string;
   onQuizTopicChange: (topic: string) => void;
@@ -41,6 +48,11 @@ interface LearningDrawerPanelProps {
   onClearNotes: () => void;
   onSaveNote: (snippet: string) => void;
   onGenerateRecap: () => void;
+  // Canvas-specific props
+  canvasContent: string;
+  onCanvasContentChange: (content: string) => void;
+  onTriggerCanvasAction: (action: 'simpler' | 'examples' | 'exam' | 'practice') => void;
+  isCanvasLoading?: boolean;
 }
 
 export function LearningDrawerPanel({
@@ -58,6 +70,10 @@ export function LearningDrawerPanel({
   onDeleteNote,
   onClearNotes,
   onGenerateRecap,
+  canvasContent,
+  onCanvasContentChange,
+  onTriggerCanvasAction,
+  isCanvasLoading = false,
 }: LearningDrawerPanelProps) {
   const isBn = language === 'bn';
 
@@ -78,6 +94,10 @@ export function LearningDrawerPanel({
 
   // --- SCRATCHPAD STATE ---
   const [copiedAllNotes, setCopiedAllNotes] = useState(false);
+  const [copiedCanvas, setCopiedCanvas] = useState(false);
+
+  // --- CANVAS VIEW MODE ---
+  const [canvasEditMode, setCanvasEditMode] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
@@ -169,6 +189,26 @@ export function LearningDrawerPanel({
     setTimeout(() => setCopiedAllNotes(false), 2000);
   };
 
+  // Export Canvas Content
+  const handleExportCanvas = () => {
+    if (!canvasContent) return;
+    const blob = new Blob([canvasContent], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `ThinkWise_Study_Workspace_${Date.now()}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCopyCanvas = () => {
+    if (!canvasContent) return;
+    navigator.clipboard.writeText(canvasContent);
+    setCopiedCanvas(true);
+    setTimeout(() => setCopiedCanvas(false), 2000);
+  };
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -178,47 +218,59 @@ export function LearningDrawerPanel({
       />
 
       {/* Slide-over Right Workspace Panel */}
-      <div className="fixed top-0 bottom-0 right-0 z-40 w-full sm:w-[420px] lg:w-[440px] bg-white dark:bg-[#0F0F10] border-l border-zinc-200 dark:border-white/[0.08] shadow-2xl flex flex-col animate-slideLeft transition-all text-zinc-900 dark:text-white">
+      <div className="fixed top-0 bottom-0 right-0 z-40 w-full sm:w-[480px] lg:w-[520px] bg-white dark:bg-[#0F0F10] border-l border-zinc-200 dark:border-white/[0.08] shadow-2xl flex flex-col animate-slideLeft transition-all text-zinc-900 dark:text-white">
         {/* Panel Header & Navigation Switcher */}
-        <div className="p-3 sm:p-3.5 border-b border-zinc-200 dark:border-white/[0.08] flex items-center justify-between gap-2">
-          {/* Segmented Tool Tabs */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/[0.06] text-xs">
+        <div className="p-3 sm:p-3.5 border-b border-zinc-200 dark:border-white/[0.08] flex items-center justify-between gap-2 overflow-x-auto select-none">
+          {/* Segmented Tool Tabs (4 Options including Canvas) */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/[0.06] text-[11px] sm:text-xs">
+            <button
+              onClick={() => onTabChange('canvas')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+                activeTab === 'canvas'
+                  ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+              }`}
+            >
+              <Edit3 className="w-3.5 h-3.5 text-indigo-500" />
+              <span>{isBn ? 'ক্যানভাস' : 'Canvas'}</span>
+            </button>
+
             <button
               onClick={() => onTabChange('quiz')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
                 activeTab === 'quiz'
                   ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-xs'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
-              <Compass className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+              <Compass className="w-3.5 h-3.5 text-emerald-500" />
               <span>{isBn ? 'কুইজ' : 'Quiz'}</span>
             </button>
 
             <button
               onClick={() => onTabChange('teach_back')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
                 activeTab === 'teach_back'
                   ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-xs'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               <Award className="w-3.5 h-3.5 text-[#7C8CFF]" />
-              <span>{isBn ? 'টিচ-ব্যাক' : 'Teach-Back'}</span>
+              <span>{isBn ? 'টিচ-ব্যাক' : 'Teach'}</span>
             </button>
 
             <button
               onClick={() => onTabChange('scratchpad')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
                 activeTab === 'scratchpad'
                   ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-xs'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
-              <Bookmark className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+              <Bookmark className="w-3.5 h-3.5 text-amber-500" />
               <span>{isBn ? 'নোটস' : 'Notes'}</span>
               {savedNotes.length > 0 && (
-                <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-300 ml-0.5">
+                <span className="text-[10px] font-mono text-zinc-500 ml-0.5">
                   ({savedNotes.length})
                 </span>
               )}
@@ -228,7 +280,7 @@ export function LearningDrawerPanel({
           {/* Close Panel Button */}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer shrink-0"
             aria-label="Close panel"
           >
             <X className="w-4 h-4" />
@@ -236,7 +288,125 @@ export function LearningDrawerPanel({
         </div>
 
         {/* Panel Dynamic Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col justify-start">
+          {/* TAB 0: EDITABLE CANVAS WORKSPACE */}
+          {activeTab === 'canvas' && (
+            <div className="flex-1 flex flex-col space-y-3 animate-fadeIn h-full">
+              {/* Toolbar Actions */}
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-white/[0.04]">
+                <div className="flex items-center gap-1.5">
+                  <Edit3 className="w-4 h-4 text-indigo-500" />
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white">
+                    {isBn ? 'থিঙ্কওয়াইজ স্টাডি ক্যানভাস' : 'ThinkWise Study Canvas'}
+                  </h4>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCanvasEditMode((prev) => !prev)}
+                    className="px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/[0.06] bg-zinc-50 dark:bg-white/[0.02] text-[10px] font-semibold hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer"
+                  >
+                    {canvasEditMode ? (isBn ? 'রিভিউ মোড' : 'Preview') : (isBn ? 'এডিট মোড' : 'Edit Source')}
+                  </button>
+                  <button
+                    onClick={handleCopyCanvas}
+                    disabled={!canvasContent}
+                    className="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.06] disabled:opacity-40 transition-colors cursor-pointer"
+                    title="Copy canvas markdown"
+                  >
+                    {copiedCanvas ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={handleExportCanvas}
+                    disabled={!canvasContent}
+                    className="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.06] disabled:opacity-40 transition-colors cursor-pointer"
+                    title="Download workspace"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Loader */}
+              {isCanvasLoading && (
+                <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-400 flex items-center gap-2 select-none animate-pulse">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>{isBn ? 'ক্যানভাসে এআই লিখছে...' : 'AI is streaming workspace content...'}</span>
+                </div>
+              )}
+
+              {/* Main Workspace Body */}
+              <div className="flex-1 flex flex-col min-h-[350px]">
+                {canvasContent ? (
+                  canvasEditMode ? (
+                    <textarea
+                      value={canvasContent}
+                      onChange={(e) => onCanvasContentChange(e.target.value)}
+                      className="w-full flex-1 p-3 text-xs bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.08] rounded-2xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none h-full"
+                      placeholder={isBn ? 'এখানে নোটস টাইপ করতে পারেন...' : 'Type or edit notes directly inside the canvas...'}
+                    />
+                  ) : (
+                    <div className="w-full flex-1 p-3.5 rounded-2xl border border-zinc-200/80 dark:border-white/[0.05] bg-zinc-50/50 dark:bg-white/[0.02] overflow-y-auto leading-relaxed text-xs prose dark:prose-invert prose-xs max-w-full max-h-[50vh] scrollbar-thin">
+                      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        {canvasContent}
+                      </ReactMarkdown>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex-1 py-16 text-center space-y-3 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 border border-dashed border-zinc-200 dark:border-white/[0.08] rounded-2xl">
+                    <Edit3 className="w-8 h-8 text-indigo-500/60" />
+                    <h5 className="text-sm font-semibold text-zinc-900 dark:text-white">
+                      {isBn ? 'ফাঁকা ক্যানভাস স্পেস' : 'Empty Canvas Workspace'}
+                    </h5>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto leading-relaxed px-4">
+                      {isBn
+                        ? 'আপনার চ্যাট বক্সে "@Canvas" লিখে কোনো বিষয় ব্যাখ্যা করতে বলুন। এআই এখানে সরাসরি আপনার পড়ার জন্য নোটস, সূত্র ও প্রশ্নপত্র সম্বলিত একটি ওয়ার্কস্পেস জেনারেট করবে!'
+                        : 'Type "@Canvas" inside your prompt to route your study guide directly into this editable workspace!'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Canvas Helper Quick Actions */}
+              {canvasContent && (
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider select-none">
+                    {isBn ? 'ক্যানভাস মডিফাই করুন (AI Helpers)' : 'Modify Workspace (AI Helpers)'}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    <button
+                      onClick={() => onTriggerCanvasAction('simpler')}
+                      className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-left hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                    >
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                      <span>{isBn ? 'সহজ ভাষায় রূপান্তর করো' : 'Make Simpler'}</span>
+                    </button>
+                    <button
+                      onClick={() => onTriggerCanvasAction('examples')}
+                      className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-left hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>{isBn ? 'বাস্তব উদাহরণ যুক্ত করো' : 'Add Examples'}</span>
+                    </button>
+                    <button
+                      onClick={() => onTriggerCanvasAction('exam')}
+                      className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-left hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>{isBn ? 'পরীক্ষার উপযোগী নোটস' : 'Convert to Exam Notes'}</span>
+                    </button>
+                    <button
+                      onClick={() => onTriggerCanvasAction('practice')}
+                      className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-left hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                    >
+                      <FileCheck2 className="w-3.5 h-3.5 text-rose-500" />
+                      <span>{isBn ? 'অনুশীলন প্রশ্নপত্র যুক্ত করো' : 'Add Exercises'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* TAB 1: DIAGNOSTIC QUIZ */}
           {activeTab === 'quiz' && (
             <div className="space-y-4 animate-fadeIn">
@@ -497,7 +667,7 @@ export function LearningDrawerPanel({
                     <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 space-y-1">
                       <div className="text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>{isBn ? 'সঠিক অন্তর্দৃষ্টি:' : 'What You Mastered:'}</span>
+                        <span>{isBn ? 'সকরুণ অন্তর্দৃষ্টি:' : 'What You Mastered:'}</span>
                       </div>
                       <ul className="list-disc pl-4 space-y-0.5 text-emerald-800 dark:text-emerald-200/90 text-[11px]">
                         {teachBackAssessment.whatYouGotRight.map((r, i) => (

@@ -8,7 +8,7 @@ import {
   ResponseLanguagePreference,
   ThemePreference,
 } from '@/lib/settings';
-import { AcademicLevel, AppLanguage, SubjectArea, TeachingMode } from '@/lib/types';
+import { AcademicLevel, AppLanguage, SubjectArea, TeachingMode, GeminiModelId, ThinkingLevelId } from '@/lib/types';
 import {
   X,
   ArrowLeft,
@@ -353,6 +353,77 @@ export function SettingsCenterModal({
             {/* SECTION: TUTOR PREFERENCES */}
             {activeSection === 'tutor' && (
               <div className="space-y-5">
+                {/* Default AI Model Selection */}
+                <div>
+                  <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-1.5">
+                    {isBn ? 'ডিফল্ট এআই মডেল (Default AI Model)' : 'Default AI Model'}
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { id: 'gemini-2.5-flash' as GeminiModelId, name: 'ThinkWase Fast', desc: isBn ? 'প্রতিদিনের পড়ার জন্য দ্রুত ও কার্যকর' : 'Fast Everyday Learning' },
+                      { id: 'gemini-3.7-flash' as GeminiModelId, name: 'ThinkWase Pro', desc: isBn ? 'গভীর চিন্তন ও জটিল সমস্যা সমাধান' : 'Deeper Reasoning & Hard Problems' }
+                    ].map((m) => {
+                      const isSelected = settings.selectedModel === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => onUpdateSettings({ selectedModel: m.id })}
+                          className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer flex items-start gap-2.5 ${
+                            isSelected
+                              ? 'bg-zinc-900 text-white dark:bg-white dark:text-black border-transparent font-semibold shadow-xs'
+                              : 'bg-zinc-50 dark:bg-[#18181C] text-zinc-700 dark:text-zinc-300 border-zinc-200/80 dark:border-white/[0.08]'
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <span className="font-semibold block text-xs">{m.name}</span>
+                            <span className="text-[10px] opacity-75 truncate block mt-0.5">{m.desc}</span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 mt-0.5 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Default Thinking Level Selection */}
+                <div>
+                  <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-1.5">
+                    {isBn ? 'ডিফল্ট চিন্তন গভীরতা (Default Thinking Level)' : 'Default Thinking Level'}
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'low' as ThinkingLevelId, label: isBn ? 'কম (Low)' : 'Low', desc: isBn ? 'হালকা চিন্তন' : 'Lighter reasoning' },
+                      { id: 'medium' as ThinkingLevelId, label: isBn ? 'মাঝারি (Medium)' : 'Medium', desc: isBn ? 'ভারসাম্যপূর্ণ' : 'Balanced reasoning' },
+                      { id: 'high' as ThinkingLevelId, label: isBn ? 'বেশি (High)' : 'High', desc: isBn ? 'গভীর চিন্তন' : 'Deeper reasoning' }
+                    ].map((lvl) => {
+                      const currentThinkingLvl = settings.selectedModel === 'gemini-2.5-flash' ? settings.fastThinkingLevel : settings.proThinkingLevel;
+                      const isSelected = currentThinkingLvl === lvl.id;
+                      return (
+                        <button
+                          key={lvl.id}
+                          type="button"
+                          onClick={() => {
+                            if (settings.selectedModel === 'gemini-2.5-flash') {
+                              onUpdateSettings({ fastThinkingLevel: lvl.id });
+                            } else {
+                              onUpdateSettings({ proThinkingLevel: lvl.id });
+                            }
+                          }}
+                          className={`p-2.5 rounded-xl border text-center text-xs transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-zinc-900 text-white dark:bg-white dark:text-black border-transparent font-semibold shadow-xs'
+                              : 'bg-zinc-50 dark:bg-[#18181C] text-zinc-700 dark:text-zinc-300 border-zinc-200/80 dark:border-white/[0.08]'
+                          }`}
+                          title={lvl.desc}
+                        >
+                          <span className="font-semibold text-xs block">{lvl.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* AI Response Language */}
                 <div>
                   <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-1.5">

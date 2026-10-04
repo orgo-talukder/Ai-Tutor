@@ -10,6 +10,7 @@ import {
   ThinkingLevelId,
   UploadedFileRef,
 } from '../lib/types';
+import { MentionDefinition } from '../lib/mentions/definitions';
 import {
   AppSettings,
   DEFAULT_SETTINGS,
@@ -46,10 +47,64 @@ export default function RedesignedTutorApp() {
   // Global Application Settings Hook with safe SSR hydration match
   const { settings, updateSettings, resetSettings } = useSettings();
 
-  // Active Context
+  // Active Context derived dynamically from persistent settings
   const [currentMode, setCurrentMode] = useState<TeachingMode>(DEFAULT_SETTINGS.defaultTutorMode);
-  const [selectedModel, setSelectedModel] = useState<GeminiModelId>('gemini-3.8-flash');
-  const [selectedThinkingLevel, setSelectedThinkingLevel] = useState<ThinkingLevelId>('medium');
+  
+  const activeModel: GeminiModelId = settings.selectedModel || 'gemini-2.5-flash';
+  const activeThinkingLevel: ThinkingLevelId = (activeModel === 'gemini-2.5-flash' ? settings.fastThinkingLevel : settings.proThinkingLevel) || 'medium';
+
+  // Load and sync Firestore settings for authenticated user
+  useEffect(() => {
+    if (!user) return;
+    const syncProfileSettings = async () => {
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase/config');
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const fbSettings = userSnap.data()?.settings;
+          if (fbSettings) {
+            updateSettings(fbSettings);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to sync Firestore settings:', err);
+      }
+    };
+    syncProfileSettings();
+  }, [user, updateSettings]);
+
+  const handleSelectModel = useCallback(async (modelId: GeminiModelId) => {
+    updateSettings({ selectedModel: modelId });
+    if (user) {
+      try {
+        const { doc, setDoc } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase/config');
+        const userRef = doc(db, 'users', user.uid);
+        await setDoc(userRef, { settings: { selectedModel: modelId } }, { merge: true });
+      } catch (err) {
+        console.warn('Failed to persist model choice in Firestore:', err);
+      }
+    }
+  }, [user, updateSettings]);
+
+  const handleSelectThinkingLevel = useCallback(async (levelId: ThinkingLevelId) => {
+    const isFast = activeModel === 'gemini-2.5-flash';
+    const updatedPayload = isFast ? { fastThinkingLevel: levelId } : { proThinkingLevel: levelId };
+    
+    updateSettings(updatedPayload);
+    if (user) {
+      try {
+        const { doc, setDoc } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase/config');
+        const userRef = doc(db, 'users', user.uid);
+        await setDoc(userRef, { settings: updatedPayload }, { merge: true });
+      } catch (err) {
+        console.warn('Failed to persist thinking level in Firestore:', err);
+      }
+    }
+  }, [user, activeModel, updateSettings]);
 
   // Firestore Multi-Chat State
   const [savedChats, setSavedChats] = useState<DbChatSession[]>([]);
@@ -58,7 +113,7 @@ export default function RedesignedTutorApp() {
   // Layout panels & modals
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
-  const [activeRightTab, setActiveRightTab] = useState<'quiz' | 'teach_back' | 'scratchpad'>('quiz');
+  const [activeRightTab, setActiveRightTab] = useState<'quiz' | 'teach_back' | 'scratchpad' | 'canvas'>('canvas');
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -68,6 +123,8 @@ export default function RedesignedTutorApp() {
   const [quizTopic, setQuizTopic] = useState<string>('Photosynthesis and Light Reactions');
   const [teachBackTopic, setTeachBackTopic] = useState<string>('Newton’s Third Law of Motion');
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
+  const [canvasContent, setCanvasContent] = useState<string>('');
+  const [isCanvasLoading, setIsCanvasLoading] = useState<boolean>(false);
 
   // Conversation State & Active Multimodal Session File References
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -190,12 +247,27 @@ export default function RedesignedTutorApp() {
   const handleSendMessage = async (
     userText: string,
     overrideMode?: TeachingMode,
-    newAttachments?: AttachmentFile[]
+    newAttachments?: AttachmentFile[],
+    mentions?: MentionDefinition[]
   ) => {
     const trimmedText = userText.trim();
-    if (!trimmedText && (!newAttachments || newAttachments.length === 0)) return;
+    if (!trimmedText && (!newAttachments || newAttachments.length === 0) && (!mentions || mentions.length === 0)) return;
 
     const modeToUse = overrideMode || currentMode;
+
+    const isCanvas = mentions?.some((m) => m.id === 'canvas');
+    if (isCanvas) {
+      setIsRightPanelOpen(true);
+      setActiveRightTab('canvas');
+      setIsCanvasLoading(true);
+      setCanvasContent('');
+    } else if (mentions?.some((m) => m.id === 'quiz')) {
+      setIsRightPanelOpen(true);
+      setActiveRightTab('quiz');
+    } else if (mentions?.some((m) => m.id === 'notes')) {
+      setIsRightPanelOpen(true);
+      setActiveRightTab('scratchpad');
+    }
 
     const newRefs: UploadedFileRef[] = (newAttachments || [])
       .filter((a) => a.geminiFileUri)
@@ -279,13 +351,14 @@ export default function RedesignedTutorApp() {
           level: settings.academicLevel,
           subject: settings.defaultSubject,
           language: effectiveLang,
-          model: selectedModel,
-          thinkingLevel: selectedThinkingLevel,
+          model: activeModel,
+          thinkingLevel: activeThinkingLevel,
           fileRefs: combinedFileRefs,
           explanationDetail: settings.explanationDetail,
           useRealWorldExamples: settings.useRealWorldExamples,
           askUnderstandingChecks: settings.askUnderstandingChecks,
           showCommonMistakes: settings.showCommonMistakes,
+          mentions: mentions?.map((m) => ({ id: m.id, type: m.type, label: m.label })),
         }),
         signal: controller.signal,
       });
@@ -317,6 +390,9 @@ export default function RedesignedTutorApp() {
               const parsed = JSON.parse(dataStr);
               if (parsed.text) {
                 accumulatedText += parsed.text;
+                if (isCanvas) {
+                  setCanvasContent(accumulatedText);
+                }
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === assistantPlaceholderId
@@ -355,7 +431,7 @@ export default function RedesignedTutorApp() {
         role: 'assistant',
         content: accumulatedText,
         timestamp: Date.now(),
-        modelId: selectedModel,
+        modelId: activeModel,
         mode: modeToUse,
         isStreaming: false,
       };
@@ -400,6 +476,7 @@ export default function RedesignedTutorApp() {
       }
     } finally {
       setIsStreaming(false);
+      setIsCanvasLoading(false);
       abortControllerRef.current = null;
     }
   };
@@ -447,7 +524,7 @@ export default function RedesignedTutorApp() {
   };
 
   // Learning Tools Handlers
-  const handleOpenTool = (tool: 'quiz' | 'teach_back' | 'scratchpad') => {
+  const handleOpenTool = (tool: 'quiz' | 'teach_back' | 'scratchpad' | 'canvas') => {
     setActiveRightTab(tool);
     setIsRightPanelOpen(true);
   };
@@ -485,6 +562,31 @@ export default function RedesignedTutorApp() {
       'socratic'
     );
     setIsRightPanelOpen(false);
+  };
+
+  const handleTriggerCanvasAction = (action: 'simpler' | 'examples' | 'exam' | 'practice') => {
+    let query = '';
+    if (action === 'simpler') {
+      query = isBn
+        ? `বর্তমানে তৈরি হওয়া এই ক্যানভাস কন্টেন্টটি আরও সহজ দৈনন্দিন উপমা ব্যবহার করে নতুন করে ব্যাখ্যা করো:\n\n${canvasContent}`
+        : `Please rewrite the current canvas content into much simpler language using clear, everyday analogies:\n\n${canvasContent}`;
+    } else if (action === 'examples') {
+      query = isBn
+        ? `বর্তমানে তৈরি হওয়া এই ক্যানভাস কন্টেন্টে ২-৩টি আকর্ষণীয় বাস্তব উদাহরণ যুক্ত করে আপডেট করো:\n\n${canvasContent}`
+        : `Please add 2-3 vivid real-world examples to explain the concepts in this canvas content:\n\n${canvasContent}`;
+    } else if (action === 'exam') {
+      query = isBn
+        ? `এই ক্যানভাস কন্টেন্টটিকে পরীক্ষার প্রস্তুতির জন্য পয়েন্ট-ভিত্তিক সংক্ষেপ ও পরীক্ষার নোটে রূপান্তর করো:\n\n${canvasContent}`
+        : `Convert this canvas content into highly structured, exam-ready revision notes optimized for maximum grade performance:\n\n${canvasContent}`;
+    } else if (action === 'practice') {
+      query = isBn
+        ? `এই ক্যানভাস কন্টেন্টের বিষয়ের ওপর ভিত্তি করে নিচে ৩টি চমৎকার অনুশীলন প্রশ্ন এবং ছোট ইঙ্গিত যোগ করো:\n\n${canvasContent}`
+        : `Please append 3 challenging conceptual practice exercises with brief hints below the current canvas content:\n\n${canvasContent}`;
+    }
+
+    if (query) {
+      handleSendMessage(query, undefined, undefined, [{ id: 'canvas', label: 'Canvas', description: '', category: 'create', type: 'capability', icon: 'LayoutTemplate' }]);
+    }
   };
 
   return (
@@ -552,12 +654,12 @@ export default function RedesignedTutorApp() {
             language={settings.interfaceLanguage}
             currentMode={currentMode}
             onModeChange={setCurrentMode}
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
-            selectedThinkingLevel={selectedThinkingLevel}
-            onThinkingLevelChange={setSelectedThinkingLevel}
+            selectedModel={activeModel}
+            onModelChange={handleSelectModel}
+            selectedThinkingLevel={activeThinkingLevel}
+            onThinkingLevelChange={handleSelectThinkingLevel}
             isStreaming={isStreaming}
-            onSendMessage={(text, atts) => handleSendMessage(text, undefined, atts)}
+            onSendMessage={(text, atts, ments) => handleSendMessage(text, undefined, atts, ments)}
             onStopStreaming={handleStopStreaming}
           />
         </div>
@@ -580,6 +682,10 @@ export default function RedesignedTutorApp() {
         onClearNotes={() => setSavedNotes([])}
         onSaveNote={handleSaveNote}
         onGenerateRecap={handleGenerateRecap}
+        canvasContent={canvasContent}
+        onCanvasContentChange={setCanvasContent}
+        onTriggerCanvasAction={handleTriggerCanvasAction}
+        isCanvasLoading={isCanvasLoading}
       />
 
       {/* 4. Settings Center Modal */}

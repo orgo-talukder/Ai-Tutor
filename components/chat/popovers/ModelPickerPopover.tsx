@@ -3,7 +3,7 @@
 import React from 'react';
 import { AppLanguage, GeminiModelId, ThinkingLevelId } from '@/lib/types';
 import { ComposerPopover } from '@/components/ui/ComposerPopover';
-import { Sparkles, Check, Zap, Cpu } from 'lucide-react';
+import { Check, Zap, Cpu } from 'lucide-react';
 
 interface ModelPickerPopoverProps {
   isOpen: boolean;
@@ -35,62 +35,43 @@ export function ModelPickerPopover({
     icon: React.ReactNode;
   }[] = [
     {
-      id: 'gemini-3.8-flash',
-      name: 'Gemini 3.8 Flash',
-      descEn: 'Next-gen flagship for STEM & agents',
-      descBn: 'দ্রুততম ও সেরা ফ্ল্যাগশিপ লার্নিং মডেল',
-      badge: isBn ? 'ডিফল্ট' : 'Default',
-      icon: <Sparkles className="w-4 h-4 text-[#7C8CFF]" />,
+      id: 'gemini-2.5-flash',
+      name: 'ThinkWase Fast',
+      descEn: 'Fast, capable responses for everyday learning.',
+      descBn: 'প্রতিদিনের পড়াশোনার জন্য দ্রুত এবং কার্যকর রেসপন্স।',
+      icon: <Zap className="w-4 h-4 text-teal-500" />,
     },
     {
       id: 'gemini-3.7-flash',
-      name: 'Gemini 3.7 Flash',
-      descEn: 'Hybrid reasoning with multimodal depth',
-      descBn: 'হাইব্রিড চিন্তন ও মাল্টিমোডাল পারফরম্যান্স',
-      icon: <Zap className="w-4 h-4 text-emerald-500" />,
-    },
-    {
-      id: 'gemini-3.6-flash',
-      name: 'Gemini 3.6 Flash',
-      descEn: 'High-speed conceptual answering',
-      descBn: 'দ্রুত প্রশ্ন সমাধান ও সাধারণ শিক্ষা',
-      icon: <Zap className="w-4 h-4 text-sky-500" />,
-    },
-    {
-      id: 'gemini-3.5-flash-lite',
-      name: 'Gemini 3.5 Flash-Lite',
-      descEn: 'Lightweight & cost-efficient flash',
-      descBn: 'অতি দ্রুত ও হালকা মডেল',
-      icon: <Zap className="w-4 h-4 text-[#7C8CFF]" />,
-    },
-    {
-      id: 'gemini-3.1-pro-preview',
-      name: 'Gemini 3.1 Pro',
-      descEn: 'Deep multi-step analytical reasoning',
-      descBn: 'জটিল গাণিতিক প্রমাণ ও গবেষণা',
-      icon: <Cpu className="w-4 h-4 text-purple-500" />,
-    },
-    {
-      id: 'gemini-3.1-flash-preview',
-      name: 'Gemini 3.1 Flash',
-      descEn: 'Ultra low latency preview model',
-      descBn: 'পরবর্তী প্রজন্মের দ্রুত প্রিভিউ মডেল',
-      icon: <Sparkles className="w-4 h-4 text-amber-500" />,
-    },
-    {
-      id: 'gemini-2.5-flash',
-      name: 'Gemini 2.5 Flash',
-      descEn: 'Balanced price-performance flash',
-      descBn: 'ব্যালেন্সড লাইটওয়েট ফ্ল্যাশ মডেল',
-      icon: <Zap className="w-4 h-4 text-teal-500" />,
+      name: 'ThinkWase Pro',
+      descEn: 'Deeper reasoning for complex learning and problem solving.',
+      descBn: 'জটিল পড়াশোনা ও সমস্যা সমাধানের জন্য গভীর চিন্তন ও লজিক।',
+      icon: <Cpu className="w-4 h-4 text-indigo-500" />,
     },
   ];
 
-  const thinkingLevels: { id: ThinkingLevelId; labelEn: string; labelBn: string }[] = [
-    { id: 'off', labelEn: 'Off', labelBn: 'বন্ধ' },
-    { id: 'low', labelEn: 'Low', labelBn: 'কম' },
-    { id: 'medium', labelEn: 'Medium', labelBn: 'মাঝারি' },
-    { id: 'high', labelEn: 'High', labelBn: 'বেশি' },
+  const thinkingLevels: { id: ThinkingLevelId; labelEn: string; labelBn: string; descEn: string; descBn: string }[] = [
+    {
+      id: 'low',
+      labelEn: 'Low',
+      labelBn: 'কম',
+      descEn: 'Faster responses with lighter reasoning',
+      descBn: 'হালকা চিন্তন ও দ্রুত রেসপন্স',
+    },
+    {
+      id: 'medium',
+      labelEn: 'Medium',
+      labelBn: 'মাঝারি',
+      descEn: 'Balanced speed and reasoning',
+      descBn: 'ভারসাম্যপূর্ণ গতি ও চিন্তন ক্ষমতা',
+    },
+    {
+      id: 'high',
+      labelEn: 'High',
+      labelBn: 'বেশি',
+      descEn: 'Deeper reasoning for complex tasks',
+      descBn: 'জটিল সমস্যার জন্য গভীর চিন্তন',
+    },
   ];
 
   return (
@@ -154,14 +135,14 @@ export function ModelPickerPopover({
       <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-white/[0.06] px-1">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] font-semibold text-zinc-500 dark:text-[#A1A1AA]">
-            {isBn ? 'চিন্তন গভীরতা (Thinking Effort)' : 'Thinking Effort'}
+            {isBn ? 'চিন্তন গভীরতা' : 'Thinking Effort'}
           </span>
           <span className="text-[10px] font-medium text-[#7C8CFF]">
             {thinkingLevels.find((l) => l.id === selectedThinkingLevel)?.[isBn ? 'labelBn' : 'labelEn']}
           </span>
         </div>
 
-        <div className="grid grid-cols-4 gap-1 p-0.5 bg-zinc-100 dark:bg-[#121215] rounded-lg">
+        <div className="grid grid-cols-3 gap-1 p-0.5 bg-zinc-100 dark:bg-[#121215] rounded-lg">
           {thinkingLevels.map((lvl) => {
             const isLvlSelected = selectedThinkingLevel === lvl.id;
             return (
@@ -169,6 +150,7 @@ export function ModelPickerPopover({
                 key={lvl.id}
                 type="button"
                 onClick={() => onSelectThinkingLevel(lvl.id)}
+                title={isBn ? lvl.descBn : lvl.descEn}
                 className={`py-1 rounded-md text-[11px] font-medium text-center transition-all cursor-pointer ${
                   isLvlSelected
                     ? 'bg-white dark:bg-[#222225] text-zinc-900 dark:text-white shadow-xs font-semibold'
