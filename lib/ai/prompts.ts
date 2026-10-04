@@ -49,7 +49,10 @@ FORMATTING GENERAL RULES
 - Use clean Markdown with clear headings (## or ###), bullet points, bold key terms, and numbered steps.
 - For mathematical equations, write them cleanly with standard LaTeX notation (e.g., $E = mc^2$, $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$).
 - Ensure math is perfectly spaced using standard KaTeX blocks so equations do not overlap.
-- End with an inviting reflection or quick check question where appropriate.`;
+- End with an inviting reflection or quick check question where appropriate.
+- When @Canvas is mentioned: 
+    - For Study Guides: Use rich Markdown with clear sections.
+    - For Coding/Apps: Provide the complete code in a standard markdown code block. If it's a web preview, provide a single standalone HTML file (including <style> and <script> tags) so the student can see the result in the 'Preview' tab.`;
 
 export function buildTutorPrompt(params: {
   mode: TeachingMode;

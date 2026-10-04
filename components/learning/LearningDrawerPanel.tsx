@@ -24,6 +24,9 @@ import {
   Layers,
   FileText,
   FileCheck2,
+  Code2,
+  Play,
+  Monitor,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -98,6 +101,7 @@ export function LearningDrawerPanel({
 
   // --- CANVAS VIEW MODE ---
   const [canvasEditMode, setCanvasEditMode] = useState<boolean>(false);
+  const [canvasTab, setCanvasTab] = useState<'markdown' | 'code' | 'preview'>('markdown');
 
   if (!isOpen) return null;
 
@@ -291,37 +295,68 @@ export function LearningDrawerPanel({
         <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col justify-start">
           {/* TAB 0: EDITABLE CANVAS WORKSPACE */}
           {activeTab === 'canvas' && (
-            <div className="flex-1 flex flex-col space-y-3 animate-fadeIn h-full">
+            <div className="flex-1 flex flex-col space-y-3 animate-fadeIn h-full overflow-hidden">
               {/* Toolbar Actions */}
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-white/[0.04]">
                 <div className="flex items-center gap-1.5">
                   <Edit3 className="w-4 h-4 text-indigo-500" />
                   <h4 className="text-xs font-bold text-zinc-900 dark:text-white">
-                    {isBn ? 'থিঙ্কওয়াইজ স্টাডি ক্যানভাস' : 'ThinkWise Study Canvas'}
+                    {isBn ? 'থিঙ্কওয়াইজ ক্যানভাস' : 'ThinkWise Canvas'}
                   </h4>
                 </div>
+                
+                {/* Internal Canvas Tabs (Gemini Style) */}
+                <div className="flex items-center gap-1 p-0.5 rounded-lg bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.04]">
+                  <button
+                    onClick={() => setCanvasTab('markdown')}
+                    className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                      canvasTab === 'markdown'
+                        ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-xs'
+                        : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                    }`}
+                  >
+                    <FileText className="w-3 h-3" />
+                    <span>Markdown</span>
+                  </button>
+                  <button
+                    onClick={() => setCanvasTab('code')}
+                    className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                      canvasTab === 'code'
+                        ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-xs'
+                        : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                    }`}
+                  >
+                    <Code2 className="w-3 h-3" />
+                    <span>Code</span>
+                  </button>
+                  <button
+                    onClick={() => setCanvasTab('preview')}
+                    className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                      canvasTab === 'preview'
+                        ? 'bg-white dark:bg-white/[0.1] text-zinc-900 dark:text-white shadow-xs'
+                        : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                    }`}
+                  >
+                    <Monitor className="w-3 h-3" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setCanvasEditMode((prev) => !prev)}
-                    className="px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/[0.06] bg-zinc-50 dark:bg-white/[0.02] text-[10px] font-semibold hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer"
+                    className="p-1.5 rounded-lg border border-zinc-200 dark:border-white/[0.06] bg-zinc-50 dark:bg-white/[0.02] text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer"
+                    title={canvasEditMode ? (isBn ? 'রিভিউ মোড' : 'Preview') : (isBn ? 'এডিট মোড' : 'Edit Source')}
                   >
-                    {canvasEditMode ? (isBn ? 'রিভিউ মোড' : 'Preview') : (isBn ? 'এডিট মোড' : 'Edit Source')}
+                    <Edit3 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={handleCopyCanvas}
                     disabled={!canvasContent}
                     className="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.06] disabled:opacity-40 transition-colors cursor-pointer"
-                    title="Copy canvas markdown"
+                    title="Copy content"
                   >
                     {copiedCanvas ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                  <button
-                    onClick={handleExportCanvas}
-                    disabled={!canvasContent}
-                    className="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.06] disabled:opacity-40 transition-colors cursor-pointer"
-                    title="Download workspace"
-                  >
-                    <Download className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -335,22 +370,67 @@ export function LearningDrawerPanel({
               )}
 
               {/* Main Workspace Body */}
-              <div className="flex-1 flex flex-col min-h-[350px]">
+              <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
                 {canvasContent ? (
-                  canvasEditMode ? (
-                    <textarea
-                      value={canvasContent}
-                      onChange={(e) => onCanvasContentChange(e.target.value)}
-                      className="w-full flex-1 p-3 text-xs bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.08] rounded-2xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none h-full"
-                      placeholder={isBn ? 'এখানে নোটস টাইপ করতে পারেন...' : 'Type or edit notes directly inside the canvas...'}
-                    />
-                  ) : (
-                    <div className="w-full flex-1 p-3.5 rounded-2xl border border-zinc-200/80 dark:border-white/[0.05] bg-zinc-50/50 dark:bg-white/[0.02] overflow-y-auto leading-relaxed text-xs prose dark:prose-invert prose-xs max-w-full max-h-[50vh] scrollbar-thin">
-                      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                        {canvasContent}
-                      </ReactMarkdown>
-                    </div>
-                  )
+                  <div className="h-full flex flex-col overflow-hidden">
+                    {/* MARKDOWN VIEW */}
+                    {canvasTab === 'markdown' && (
+                      <div className="flex-1 overflow-hidden flex flex-col">
+                        {canvasEditMode ? (
+                          <textarea
+                            value={canvasContent}
+                            onChange={(e) => onCanvasContentChange(e.target.value)}
+                            className="w-full flex-1 p-3 text-xs bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.08] rounded-2xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none"
+                            placeholder={isBn ? 'এখানে নোটস টাইপ করতে পারেন...' : 'Type or edit notes directly inside the canvas...'}
+                          />
+                        ) : (
+                          <div className="w-full flex-1 p-4 rounded-2xl border border-zinc-200/80 dark:border-white/[0.05] bg-zinc-50/50 dark:bg-white/[0.02] overflow-y-auto leading-relaxed text-[13px] prose dark:prose-invert prose-xs max-w-full scrollbar-thin">
+                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                              {canvasContent}
+                            </ReactMarkdown>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* CODE VIEW */}
+                    {canvasTab === 'code' && (
+                      <div className="flex-1 flex flex-col overflow-hidden">
+                        <textarea
+                          value={canvasContent.includes('```') ? canvasContent.split('```')[1]?.split('\n').slice(1).join('\n').replace(/```$/, '') || canvasContent : canvasContent}
+                          onChange={(e) => onCanvasContentChange(e.target.value)}
+                          className="w-full flex-1 p-4 text-[13px] bg-[#1E1E20] border border-white/[0.08] rounded-2xl text-[#E0E0E0] focus:outline-none focus:border-indigo-500 font-mono leading-relaxed resize-none overflow-auto scrollbar-thin"
+                          spellCheck={false}
+                        />
+                      </div>
+                    )}
+
+                    {/* PREVIEW VIEW (Sandboxed Iframe) */}
+                    {canvasTab === 'preview' && (
+                      <div className="flex-1 bg-white rounded-2xl overflow-hidden border border-zinc-200 dark:border-white/[0.08]">
+                        <iframe
+                          title="Canvas Preview"
+                          srcDoc={`
+                            <!DOCTYPE html>
+                            <html>
+                              <head>
+                                <meta charset="UTF-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <script src="https://cdn.tailwindcss.com"></script>
+                                <style>
+                                  body { font-family: sans-serif; padding: 1rem; color: #1f2937; }
+                                </style>
+                              </head>
+                              <body>
+                                ${canvasContent.includes('```') ? canvasContent.split('```')[1]?.split('\n').slice(1).join('\n').replace(/```$/, '') || canvasContent : canvasContent}
+                              </body>
+                            </html>
+                          `}
+                          className="w-full h-full border-none"
+                        />
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex-1 py-16 text-center space-y-3 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 border border-dashed border-zinc-200 dark:border-white/[0.08] rounded-2xl">
                     <Edit3 className="w-8 h-8 text-indigo-500/60" />
@@ -368,38 +448,35 @@ export function LearningDrawerPanel({
 
               {/* Canvas Helper Quick Actions */}
               {canvasContent && (
-                <div className="space-y-1.5">
-                  <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider select-none">
-                    {isBn ? 'ক্যানভাস মডিফাই করুন (AI Helpers)' : 'Modify Workspace (AI Helpers)'}
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                <div className="pt-2 border-t border-zinc-100 dark:border-white/[0.04]">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px]">
                     <button
                       onClick={() => onTriggerCanvasAction('simpler')}
-                      className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-left hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                      className="px-2 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-center hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex flex-col items-center justify-center gap-1 font-bold cursor-pointer"
                     >
                       <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{isBn ? 'সহজ ভাষায় রূপান্তর করো' : 'Make Simpler'}</span>
+                      <span>{isBn ? 'সহজ কর' : 'Simpler'}</span>
                     </button>
                     <button
                       onClick={() => onTriggerCanvasAction('examples')}
-                      className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-left hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                      className="px-2 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-center hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex flex-col items-center justify-center gap-1 font-bold cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>{isBn ? 'বাস্তব উদাহরণ যুক্ত করো' : 'Add Examples'}</span>
+                      <span>{isBn ? 'উদাহরণ' : 'Examples'}</span>
                     </button>
                     <button
                       onClick={() => onTriggerCanvasAction('exam')}
-                      className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-left hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                      className="px-2 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-center hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex flex-col items-center justify-center gap-1 font-bold cursor-pointer"
                     >
                       <FileText className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>{isBn ? 'পরীক্ষার উপযোগী নোটস' : 'Convert to Exam Notes'}</span>
+                      <span>{isBn ? 'পরীক্ষার নোটস' : 'Exam Notes'}</span>
                     </button>
                     <button
                       onClick={() => onTriggerCanvasAction('practice')}
-                      className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-left hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
+                      className="px-2 py-2 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] text-center hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors flex flex-col items-center justify-center gap-1 font-bold cursor-pointer"
                     >
                       <FileCheck2 className="w-3.5 h-3.5 text-rose-500" />
-                      <span>{isBn ? 'অনুশীলন প্রশ্নপত্র যুক্ত করো' : 'Add Exercises'}</span>
+                      <span>{isBn ? 'অনুশীলন' : 'Exercises'}</span>
                     </button>
                   </div>
                 </div>

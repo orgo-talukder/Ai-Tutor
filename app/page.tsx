@@ -26,6 +26,8 @@ import {
   getChatMessages,
   subscribeToChatMessages,
   deleteChatSession,
+  renameChatSession,
+  togglePinChatSession,
   saveNotebookNote,
   getUserNotebookNotes,
   deleteNotebookNote,
@@ -240,6 +242,22 @@ export default function RedesignedTutorApp() {
       }
     } catch (err) {
       console.error('Failed to delete chat:', err);
+    }
+  };
+
+  const handleRenameChat = async (chatId: string, newTitle: string) => {
+    try {
+      await renameChatSession(chatId, newTitle);
+    } catch (err) {
+      console.error('Failed to rename chat:', err);
+    }
+  };
+
+  const handlePinChat = async (chatId: string, isPinned: boolean) => {
+    try {
+      await togglePinChatSession(chatId, isPinned);
+    } catch (err) {
+      console.error('Failed to pin/unpin chat:', err);
     }
   };
 
@@ -610,6 +628,8 @@ export default function RedesignedTutorApp() {
         activeChatId={activeChatId}
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
+        onRenameChat={handleRenameChat}
+        onPinChat={handlePinChat}
       />
 
       {/* 2. Main Chat Viewport */}

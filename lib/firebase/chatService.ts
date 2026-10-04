@@ -70,6 +70,7 @@ export interface DbChatSession {
   language: 'en' | 'bn';
   createdAt: number;
   updatedAt: number;
+  isPinned?: boolean;
 }
 
 export async function createChatSession(
@@ -106,12 +107,12 @@ export async function createChatSession(
 
 export async function getUserChatSessions(userId: string): Promise<DbChatSession[]> {
   const path = 'chats';
-  try {
-    const q = query(
-      collection(db, 'chats'),
-      where('userId', '==', userId),
-      orderBy('updatedAt', 'desc')
-    );
+    try {
+      const q = query(
+        collection(db, 'chats'),
+        where('userId', '==', userId),
+        orderBy('updatedAt', 'desc')
+      );
     const snap = await getDocs(q);
     return snap.docs.map(docSnap => {
       const data = docSnap.data();
@@ -124,8 +125,9 @@ export async function getUserChatSessions(userId: string): Promise<DbChatSession
         language: data.language || 'bn',
         createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : Date.now(),
         updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toMillis() : Date.now(),
+        isPinned: data.isPinned || false,
       };
-    });
+    }).sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, path);
     return [];
@@ -156,8 +158,9 @@ export function subscribeToUserChats(
             language: data.language || 'bn',
             createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : Date.now(),
             updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toMillis() : Date.now(),
+            isPinned: data.isPinned || false,
           };
-        });
+        }).sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
         onChatsUpdate(chats);
       },
       (error) => {
@@ -320,5 +323,23 @@ export async function deleteNotebookNote(noteId: string): Promise<void> {
     await deleteDoc(doc(db, 'notebooks', noteId));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+export async function renameChatSession(chatId: string, newTitle: string): Promise<void> {
+  const path = `chats/${chatId}`;
+  try {
+    await setDoc(doc(db, 'chats', chatId), { title: newTitle, updatedAt: serverTimestamp() }, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function togglePinChatSession(chatId: string, isPinned: boolean): Promise<void> {
+  const path = `chats/${chatId}`;
+  try {
+    await setDoc(doc(db, 'chats', chatId), { isPinned, updatedAt: serverTimestamp() }, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
   }
 }

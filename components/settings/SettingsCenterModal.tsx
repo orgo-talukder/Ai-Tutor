@@ -25,7 +25,12 @@ import {
   RotateCcw,
   Check,
   Sparkles,
+  User,
+  Mail,
+  Trash,
 } from 'lucide-react';
+import { useAuth } from '@/lib/firebase/authContext';
+import Image from 'next/image';
 
 interface SettingsCenterModalProps {
   isOpen: boolean;
@@ -37,6 +42,7 @@ interface SettingsCenterModalProps {
 }
 
 type SettingsSectionId =
+  | 'account'
   | 'general'
   | 'appearance'
   | 'language'
@@ -56,7 +62,8 @@ export function SettingsCenterModal({
   onResetSettings,
   onClearSession,
 }: SettingsCenterModalProps) {
-  const [activeSection, setActiveSection] = useState<SettingsSectionId>('general');
+  const { user, logout } = useAuth();
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>('account');
   const [mobileDetailView, setMobileDetailView] = useState<boolean>(false);
 
   if (!isOpen) return null;
@@ -69,6 +76,12 @@ export function SettingsCenterModal({
     labelBn: string;
     icon: React.ReactNode;
   }[] = [
+    {
+      id: 'account',
+      labelEn: 'Account',
+      labelBn: 'অ্যাকাউন্ট (Account)',
+      icon: <User className="w-4 h-4" />,
+    },
     {
       id: 'general',
       labelEn: 'General',
@@ -234,6 +247,95 @@ export function SettingsCenterModal({
                 {isBn ? currentNav.labelBn : currentNav.labelEn}
               </h2>
             </div>
+
+            {/* SECTION: ACCOUNT */}
+            {activeSection === 'account' && (
+              <div className="space-y-6">
+                {/* User Profile Card */}
+                <div className="p-5 bg-zinc-50 dark:bg-[#18181C] border border-zinc-200/80 dark:border-white/[0.08] rounded-2xl flex flex-col sm:flex-row items-center gap-5">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#7C8CFF] shrink-0 bg-zinc-200 dark:bg-white/10 flex items-center justify-center">
+                    {user?.photoURL ? (
+                      <Image
+                        src={user.photoURL}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                        unoptimized
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <User className="w-8 h-8 text-zinc-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-center sm:text-left min-w-0">
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white truncate">
+                      {user?.displayName || (isBn ? 'ইউজার' : 'User')}
+                    </h3>
+                    <p className="text-xs text-zinc-500 flex items-center justify-center sm:justify-start gap-1.5 mt-1">
+                      <Mail className="w-3 h-3" />
+                      {user?.email}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <span className="px-2.5 py-1 rounded-full bg-[#7C8CFF]/15 text-[#7C8CFF] text-[10px] font-bold uppercase tracking-wider">
+                        {isBn ? 'ফ্রি প্ল্যান' : 'Free Plan'}
+                      </span>
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-500 text-[10px] font-bold uppercase tracking-wider">
+                        {isBn ? 'সচল' : 'Active'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Actions */}
+                <div className="space-y-3">
+                  <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                    {isBn ? 'অ্যাকাউন্ট ম্যানেজমেন্ট' : 'Account Management'}
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => logout()}
+                      className="flex items-center gap-3 p-3.5 bg-zinc-50 dark:bg-[#18181C] border border-zinc-200/80 dark:border-white/[0.08] rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/[0.04] transition-all cursor-pointer text-left"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                        <RotateCcw className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <div className="text-[13px] font-bold text-zinc-900 dark:text-white">{isBn ? 'লগ-আউট' : 'Sign Out'}</div>
+                        <div className="text-[10px] text-zinc-500">{isBn ? 'আপনার সেশন শেষ করুন' : 'End your session'}</div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (window.confirm(isBn ? 'আপনি কি নিশ্চিত যে অ্যাকাউন্টটি চিরস্থায়ীভাবে মুছে ফেলতে চান?' : 'Are you sure you want to permanently delete your account? This action is irreversible.')) {
+                          alert(isBn ? 'অ্যাকাউন্ট ডিলিট করার জন্য সাপোর্ট টিমে ইমেইল করুন।' : 'Please contact support to request account deletion.');
+                        }
+                      }}
+                      className="flex items-center gap-3 p-3.5 bg-rose-500/5 border border-rose-500/10 rounded-2xl hover:bg-rose-500/10 transition-all cursor-pointer text-left"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
+                        <Trash className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <div className="text-[13px] font-bold text-rose-500">{isBn ? 'অ্যাকাউন্ট মুছুন' : 'Delete Account'}</div>
+                        <div className="text-[10px] text-rose-500/60">{isBn ? 'সকল ডাটা ডিলিট করুন' : 'Remove all personal data'}</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Personal Info Edit (Placeholder for future) */}
+                <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex items-center gap-3">
+                  <Info className="w-5 h-5 text-blue-500 shrink-0" />
+                  <p className="text-[11px] text-blue-600/80 dark:text-blue-400/70 leading-relaxed">
+                    {isBn 
+                      ? 'প্রোফাইল ফটো বা নাম পরিবর্তন করার জন্য আপনার গুগল অ্যাকাউন্টের সেটিংস ব্যবহার করুন। আমরা সরাসরি আপনার গুগল প্রোফাইল থেকে তথ্য সংগ্রহ করি।'
+                      : 'To change your profile photo or name, please update your Google Account settings. We sync your profile details directly from Google.'}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* SECTION: GENERAL */}
             {activeSection === 'general' && (

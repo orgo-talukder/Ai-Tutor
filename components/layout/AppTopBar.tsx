@@ -30,18 +30,15 @@ export function AppTopBar({
       {/* Left: Hamburger menu + Brand Identity */}
       <div className="flex items-center gap-2 min-w-0">
         <button
-          onClick={onToggleSidebar}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSidebar();
+          }}
           className="w-9 h-9 flex items-center justify-center rounded-xl text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0"
           aria-label={isBn ? 'মেনু খুলুন' : 'Open navigation menu'}
         >
           <Menu className="w-4.5 h-4.5" />
         </button>
-
-        <div className="flex items-center gap-1.5 min-w-0 select-none">
-          <span className="font-semibold text-sm tracking-tight text-zinc-900 dark:text-white truncate">
-            {isBn ? 'থিঙ্কওয়াইজ এআই' : 'ThinkWise AI'}
-          </span>
-        </div>
       </div>
 
       {/* Right: + New Chat Button + Auth/Profile Button */}
@@ -56,44 +53,6 @@ export function AppTopBar({
           <Plus className="w-3.5 h-3.5 text-[#7C8CFF] shrink-0" />
           <span className="hidden sm:inline">{isBn ? 'নতুন চ্যাট' : 'New Chat'}</span>
         </button>
-
-        {user ? (
-          <button
-            type="button"
-            onClick={onOpenProfile || onOpenAuth}
-            className="h-8.5 sm:h-9 px-2 sm:px-2.5 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-zinc-100 dark:bg-white/[0.04] hover:bg-zinc-200 dark:hover:bg-white/[0.08] text-xs font-medium flex items-center gap-2 text-zinc-800 dark:text-zinc-200 cursor-pointer shrink-0 transition-colors"
-            title={user.email || 'User Account'}
-          >
-            {user.photoURL ? (
-              <div className="relative w-5.5 h-5.5 rounded-full overflow-hidden border border-[#7C8CFF] shrink-0">
-                <Image
-                  src={user.photoURL}
-                  alt={user.displayName || 'Avatar'}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-            ) : (
-              <div className="w-5.5 h-5.5 rounded-full bg-[#7C8CFF]/20 text-[#7C8CFF] flex items-center justify-center text-[10px] font-bold shrink-0">
-                {user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
-              </div>
-            )}
-            <span className="hidden md:inline max-w-[110px] truncate text-[11px] font-semibold">
-              {user.displayName || user.email?.split('@')[0]}
-            </span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onOpenAuth}
-            className="h-8.5 sm:h-9 px-3 rounded-xl bg-[#7C8CFF] hover:bg-[#6878EF] text-white text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs shrink-0"
-          >
-            <LogIn className="w-3.5 h-3.5 shrink-0" />
-            <span>{isBn ? 'লগইন' : 'Sign in'}</span>
-          </button>
-        )}
       </div>
     </header>
   );

@@ -89,7 +89,11 @@ export async function POST(req: NextRequest) {
       mentionInjections += `\n\n[ACTIVE CAPABILITIES & SPECIAL REQUESTS]`;
       for (const cap of activeCapabilities) {
         if (cap.id === 'canvas') {
-          mentionInjections += `\n- CAPABILITY: @Canvas. The user has routed this request to an editable workspace. Create a comprehensive, beautiful study workspace with Title, Key Concepts, Formulas, and Practice Questions. Structure your output clearly using Markdown.`;
+          mentionInjections += `\n- CAPABILITY: @Canvas. The user has routed this request to an interactive workspace. 
+          If you are providing a study guide, use rich Markdown. 
+          If you are providing code (HTML/JS), use a code block. 
+          The canvas has three tabs: Markdown, Code, and Preview. 
+          Structure your output clearly. If it's a website or game, provide the full standalone HTML/CSS/JS within a single code block for the 'Preview' tab to work.`;
         } else if (cap.id === 'notes') {
           mentionInjections += `\n- CAPABILITY: @Notes. Structure your response as a highly detailed, clean, exam-ready revision note or study guide with distinct bullet points, terminology, and mnemonics.`;
         } else if (cap.id === 'diagram') {
