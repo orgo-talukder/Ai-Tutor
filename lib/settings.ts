@@ -53,7 +53,7 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
-  interfaceLanguage: 'bn',
+  interfaceLanguage: 'en',
   responseLanguage: 'auto',
   defaultTutorMode: 'socratic',
   explanationDetail: 'standard',

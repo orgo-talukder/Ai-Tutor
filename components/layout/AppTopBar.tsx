@@ -13,6 +13,7 @@ interface AppTopBarProps {
   onNewChat: () => void;
   onOpenAuth: () => void;
   onOpenProfile?: () => void;
+  onToggleLanguage?: () => void;
   chatTitle?: string;
 }
 
@@ -22,6 +23,7 @@ export function AppTopBar({
   onNewChat,
   onOpenAuth,
   onOpenProfile,
+  onToggleLanguage,
   chatTitle,
 }: AppTopBarProps) {
   const { user } = useAuth();
@@ -56,14 +58,28 @@ export function AppTopBar({
         </button>
 
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] truncate max-w-[200px] sm:max-w-[320px]">
+          <span className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] truncate max-w-[160px] sm:max-w-[320px]">
             {chatTitle || (isBn ? 'নতুন কথোপকথন' : 'New Chat')}
           </span>
         </div>
       </div>
 
-      {/* Right: Actions (Theme, Share, New Chat, Profile) */}
+      {/* Right: Actions (Language, Theme, Share, New Chat, Profile) */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Language Switcher Pill */}
+        {onToggleLanguage && (
+          <button
+            type="button"
+            onClick={onToggleLanguage}
+            title={isBn ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'}
+            className="h-8 px-2 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border-default)] text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1 cursor-pointer"
+          >
+            <span className={!isBn ? 'text-[var(--accent)] font-extrabold' : ''}>EN</span>
+            <span className="text-[var(--text-tertiary)]">/</span>
+            <span className={isBn ? 'text-[var(--accent)] font-extrabold' : ''}>বাংলা</span>
+          </button>
+        )}
+
         {/* Theme Toggle Button */}
         <ThemeToggle />
 

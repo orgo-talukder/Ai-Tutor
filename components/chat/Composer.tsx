@@ -111,11 +111,15 @@ export function Composer({
   const isBn = language === 'bn';
   const hasContentToSend = input.trim().length > 0 || attachments.length > 0 || selectedMentions.length > 0;
 
-  // Auto-resize textarea
+  // Auto-resize textarea with scrollbar management
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 140)}px`;
+      const maxHeight = typeof window !== 'undefined' && window.innerWidth >= 640 ? 200 : 140;
+      const scrollH = textareaRef.current.scrollHeight;
+      const newHeight = Math.min(scrollH, maxHeight);
+      textareaRef.current.style.height = `${newHeight}px`;
+      textareaRef.current.style.overflowY = scrollH > maxHeight ? 'auto' : 'hidden';
     }
   }, [input]);
 
@@ -658,14 +662,14 @@ export function Composer({
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             rows={1}
-            className="w-full resize-none bg-transparent text-sm sm:text-[15px] text-zinc-900 dark:text-[#F5F5F5] focus:outline-none pt-[12px] pb-[12px] pl-[10px] pr-[10px] min-h-[44px] max-h-36 leading-relaxed z-10"
+            className="w-full resize-none bg-transparent text-base sm:text-[15px] text-zinc-900 dark:text-[#F5F5F5] focus:outline-none pt-[10px] pb-[10px] px-[10px] min-h-[44px] sm:min-h-[48px] max-h-[140px] sm:max-h-[200px] leading-relaxed z-10"
           />
         </div>
 
-        {/* Bottom Controls Row: [+] | [Socratic ▾] | [Gemini 3.8 Flash · Medium ▾] | [🎙 / ↑] */}
-        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-zinc-100 dark:border-white/[0.05] gap-1 sm:gap-3 overflow-visible">
+        {/* Bottom Controls Row: [+] | [ThinkWise Fast ▾] | Spacer | [🎙 / ↑] */}
+        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-zinc-100 dark:border-white/[0.05] gap-2 overflow-visible">
           {/* Left: Flex controls container with overflow-visible to prevent clipping popovers */}
-          <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1 py-0.5 pr-2 overflow-visible z-30">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 py-0.5 pr-1 overflow-visible z-30">
             {/* 1. [+] Attachment Button & Popover */}
             <div className="relative inline-flex items-center shrink-0">
               <button
@@ -700,36 +704,8 @@ export function Composer({
               />
             </div>
 
-            {/* 2. Socratic vs Quick Answer Mode Pill per §10.5 & §11.3 */}
-            <div className="inline-flex items-center p-0.5 bg-zinc-100 dark:bg-white/[0.05] rounded-full border border-zinc-200/80 dark:border-white/[0.08] text-[11px] shrink-0">
-              <button
-                type="button"
-                onClick={() => onModeChange('socratic')}
-                className={`px-2 sm:px-2.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
-                  currentMode === 'socratic'
-                    ? 'bg-white dark:bg-[#1E1E24] text-zinc-900 dark:text-white shadow-xs font-semibold'
-                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-                title={isBn ? 'সক্রেটিক টিউটর মোড: ধাপে ধাপে নির্দেশনা' : 'Socratic Tutor Mode: Guides step-by-step'}
-              >
-                {isBn ? 'টিউটর' : 'Tutor'}
-              </button>
-              <button
-                type="button"
-                onClick={() => onModeChange('worked_solution')}
-                className={`px-2 sm:px-2.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
-                  currentMode === 'worked_solution'
-                    ? 'bg-white dark:bg-[#1E1E24] text-zinc-900 dark:text-white shadow-xs font-semibold'
-                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-                title={isBn ? 'সরাসরি উত্তর: পূর্ণাঙ্গ সমাধান' : 'Quick Answer: Direct worked solution'}
-              >
-                {isBn ? 'দ্রুত উত্তর' : 'Quick'}
-              </button>
-            </div>
-
-            {/* 3. Control 2: [ThinkWise Fast · Medium ▾] ModelPickerPopover */}
-            <div className="relative inline-flex items-center shrink-0">
+            {/* 2. ModelPickerPopover [ThinkWise Fast ▾] */}
+            <div className="relative inline-flex items-center min-w-0 max-w-[calc(100%-40px)] shrink">
               <button
                 type="button"
                 aria-haspopup="menu"
@@ -740,16 +716,16 @@ export function Composer({
                   e.stopPropagation();
                   setActivePopover((prev) => (prev === 'model' ? null : 'model'));
                 }}
-                className={`h-8 px-2 sm:px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer shrink-0 ${
+                className={`h-8 px-2.5 sm:px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer shrink-0 max-w-full ${
                   activePopover === 'model'
                     ? 'bg-zinc-900 text-white dark:bg-white dark:text-black border-transparent shadow-xs'
                     : 'bg-zinc-100 dark:bg-white/[0.05] hover:bg-zinc-200 dark:hover:bg-white/[0.09] border-zinc-200/80 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
                 }`}
               >
-                <span className="font-mono font-semibold truncate max-w-[110px] sm:max-w-none">
+                <span className="font-mono font-semibold truncate">
                   {modelShortLabels[selectedModel] || 'ThinkWise Fast'}
                 </span>
-                <span className="opacity-70 font-normal hidden sm:inline truncate max-w-[50px] sm:max-w-none">
+                <span className="opacity-70 font-normal hidden sm:inline truncate">
                   {isBn ? effortLabels[selectedThinkingLevel]?.bn : effortLabels[selectedThinkingLevel]?.en}
                 </span>
                 <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />

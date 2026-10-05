@@ -12,8 +12,8 @@ export function AnimatedComposerPlaceholder({ isBn, isVisible }: AnimatedCompose
   const [index, setIndex] = useState(0);
 
   const placeholders = isBn
-    ? ['থিঙ্কওয়াইজ এআই-কে যেকোনো কিছু জিজ্ঞাসা করুন...', 'যেকোনো টুল বা কনটেক্সট @মেনশন করো...']
-    : ['Ask ThinkWise AI anything...', '@mention anything...'];
+    ? ['ThinkWise AI-কে যেকোনো কিছু জিজ্ঞাসা করুন…', 'গণিত, বিজ্ঞান, কোডিং বা যেকোনো বিষয়ে প্রশ্ন করুন…']
+    : ['Ask ThinkWise AI anything…', 'Ask about math, science, coding, or any topic…'];
 
   useEffect(() => {
     if (!isVisible) return;

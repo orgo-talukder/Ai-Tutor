@@ -653,12 +653,13 @@ export default function RedesignedTutorApp() {
           onNewChat={handleNewChat}
           onOpenAuth={() => setIsAuthOpen(true)}
           onOpenProfile={() => setIsProfileOpen(true)}
+          onToggleLanguage={() => updateSettings({ interfaceLanguage: isBn ? 'en' : 'bn' })}
           chatTitle={activeChat?.title}
         />
 
         {/* Chat Stream Viewport */}
         <main className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-2 sm:py-4 flex flex-col justify-between">
-          <div className="w-full max-w-[760px] mx-auto flex-1 flex flex-col justify-start space-y-4">
+          <div className={`w-full max-w-[760px] mx-auto flex-1 flex flex-col ${messages.length === 0 ? 'justify-center my-auto' : 'justify-start space-y-4'}`}>
             {isLoadingMessages && messages.length === 0 ? (
               <ChatMessagesSkeleton isBn={isBn} />
             ) : messages.length === 0 ? (

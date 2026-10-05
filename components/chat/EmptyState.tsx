@@ -111,7 +111,7 @@ export function EmptyState({ language, onSelectSuggestion }: EmptyStateProps) {
       ];
 
   return (
-    <div className="relative flex flex-col items-center justify-center px-3 sm:px-6 max-w-2xl mx-auto my-auto py-2 sm:py-6 select-none animate-fadeIn">
+    <div className="relative flex flex-col items-center justify-center w-full max-w-2xl mx-auto my-auto px-3 sm:px-6 py-2 sm:py-6 select-none animate-fadeIn min-w-0 align-self-stretch">
       {/* Background Radial Glow Effect */}
       <div
         className="absolute -top-12 left-1/2 -translate-x-1/2 w-[340px] sm:w-[500px] h-[260px] sm:h-[320px] rounded-full pointer-events-none opacity-40 dark:opacity-30 blur-[90px]"
@@ -122,27 +122,27 @@ export function EmptyState({ language, onSelectSuggestion }: EmptyStateProps) {
       />
 
       {/* Floating Logo Badge */}
-      <div className="relative z-10 w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C86FF] to-[#6B76F5] flex items-center justify-center text-white mb-3.5 shadow-md shadow-[#6B76F5]/25">
-        <Sparkles className="w-6 h-6" />
+      <div className="relative z-10 w-10 sm:w-12 h-10 sm:h-12 rounded-2xl bg-gradient-to-tr from-[#7C86FF] to-[#6B76F5] flex items-center justify-center text-white mb-2.5 sm:mb-3.5 shadow-md shadow-[#6B76F5]/25">
+        <Sparkles className="w-5 sm:w-6 h-5 sm:h-6" />
       </div>
 
       {/* Personalized Greeting with Hydration Guard */}
       <h1
         suppressHydrationWarning
-        className="relative z-10 text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)] mb-1 text-center"
+        className="relative z-10 text-lg sm:text-2xl font-bold tracking-tight text-[var(--text-primary)] mb-1 text-center text-balance"
       >
         {getGreeting()}
       </h1>
 
       {/* Subtitle */}
-      <p className="relative z-10 text-xs sm:text-[13px] text-[var(--text-secondary)] max-w-md mx-auto mb-6 text-center leading-relaxed">
+      <p className="relative z-10 text-[11px] sm:text-[13px] text-[var(--text-secondary)] max-w-[520px] mx-auto mb-4 sm:mb-6 text-center leading-relaxed">
         {isBn
           ? 'আজ কী শিখতে চান? গণিত, বিজ্ঞান, কোডিং বা যেকোনো বিষয়ে প্রশ্ন করুন।'
           : 'What would you like to master today? Ask about mathematics, physics, biology, or coding.'}
       </p>
 
       {/* 2x2 Suggestion Cards Grid */}
-      <div className="relative z-10 w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      <div className="relative z-10 w-full grid grid-cols-2 gap-2.5 sm:gap-3 max-w-[720px] mx-auto">
         {suggestions.map((item, idx) => {
           const Icon = item.icon;
           return (
@@ -150,19 +150,19 @@ export function EmptyState({ language, onSelectSuggestion }: EmptyStateProps) {
               key={idx}
               type="button"
               onClick={() => onSelectSuggestion(item.query)}
-              className="group w-full p-3 sm:p-3.5 rounded-2xl bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border-default)] hover:border-[var(--accent)]/50 transition-all duration-200 flex flex-col justify-between text-left shadow-2xs hover:shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-[0.99]"
+              className="group w-full min-w-0 p-3 sm:p-4 min-h-[96px] sm:min-h-[120px] rounded-2xl bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border-default)] hover:border-[var(--accent)]/50 transition-all duration-200 flex flex-col justify-between text-left shadow-2xs hover:shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-[0.99]"
             >
-              <div className="flex items-center justify-between w-full mb-1.5">
-                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${item.color}`}>
-                  <Icon className="w-3 h-3" />
-                  <span>{item.subject}</span>
+              <div className="flex items-center justify-between w-full mb-1">
+                <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-semibold border max-w-full truncate ${item.color}`}>
+                  <Icon className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{item.subject}</span>
                 </span>
-                <ArrowRight className="w-3.5 h-3.5 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="w-3.5 h-3.5 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all hidden sm:block shrink-0" />
               </div>
-              <h2 className="text-xs sm:text-[13px] font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-0.5">
+              <h2 className="text-xs sm:text-[14px] font-semibold sm:font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-2 leading-[1.45]">
                 {item.title}
               </h2>
-              <p className="text-[11px] text-[var(--text-secondary)] line-clamp-1">
+              <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] line-clamp-2 hidden sm:block mt-0.5">
                 {item.desc}
               </p>
             </button>
