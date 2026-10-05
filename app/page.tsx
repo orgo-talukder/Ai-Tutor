@@ -42,6 +42,7 @@ import { AboutModal } from '../components/ui/AboutModal';
 import { SettingsCenterModal } from '../components/settings/SettingsCenterModal';
 import { AuthModal } from '../components/auth/AuthModal';
 import { UserProfileModal } from '../components/auth/UserProfileModal';
+import { ChatMessagesSkeleton } from '@/components/skeletons';
 
 export default function RedesignedTutorApp() {
   const { user } = useAuth();
@@ -111,6 +112,8 @@ export default function RedesignedTutorApp() {
   // Firestore Multi-Chat State
   const [savedChats, setSavedChats] = useState<DbChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [isLoadingChats, setIsLoadingChats] = useState<boolean>(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState<boolean>(false);
 
   // Layout panels & modals
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -172,11 +175,11 @@ export default function RedesignedTutorApp() {
   // Subscribe to user's saved chats in Firestore in real-time
   useEffect(() => {
     if (!user) {
-      Promise.resolve().then(() => setSavedChats([]));
       return;
     }
     const unsubscribe = subscribeToUserChats(user.uid, (loadedChats) => {
       setSavedChats(loadedChats);
+      setIsLoadingChats(false);
     });
     return () => {
       unsubscribe();
@@ -185,11 +188,14 @@ export default function RedesignedTutorApp() {
 
   // Subscribe to active chat messages in Firestore in real-time
   useEffect(() => {
-    if (!user || !activeChatId) return;
+    if (!user || !activeChatId) {
+      return;
+    }
     const unsubscribe = subscribeToChatMessages(activeChatId, user.uid, (loadedMsgs) => {
       if (!isStreaming) {
         setMessages(loadedMsgs);
       }
+      setIsLoadingMessages(false);
     });
     return () => {
       unsubscribe();
@@ -213,6 +219,7 @@ export default function RedesignedTutorApp() {
       setIsStreaming(false);
     }
     setActiveChatId(null);
+    setIsLoadingMessages(false);
     setMessages([]);
     setSessionFileRefs([]);
   };
@@ -229,6 +236,8 @@ export default function RedesignedTutorApp() {
       setIsStreaming(false);
     }
     setActiveChatId(chatId);
+    setIsLoadingMessages(true);
+    setMessages([]);
     setSessionFileRefs([]);
   };
 
@@ -627,6 +636,7 @@ export default function RedesignedTutorApp() {
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
         chats={savedChats}
+        isLoadingChats={isLoadingChats}
         activeChatId={activeChatId}
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
@@ -649,7 +659,9 @@ export default function RedesignedTutorApp() {
         {/* Chat Stream Viewport */}
         <main className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-2 sm:py-4 flex flex-col justify-between">
           <div className="w-full max-w-[760px] mx-auto flex-1 flex flex-col justify-start space-y-4">
-            {messages.length === 0 ? (
+            {isLoadingMessages && messages.length === 0 ? (
+              <ChatMessagesSkeleton isBn={isBn} />
+            ) : messages.length === 0 ? (
               <EmptyState
                 language={settings.interfaceLanguage}
                 onSelectSuggestion={(promptText) => {
@@ -657,15 +669,17 @@ export default function RedesignedTutorApp() {
                 }}
               />
             ) : (
-              messages.map((msg) => (
-                <MessageItem
-                  key={msg.id}
-                  message={msg}
-                  language={settings.interfaceLanguage}
-                  onActionClick={handleActionClick}
-                  onSaveNote={handleSaveNote}
-                />
-              ))
+              <div className="space-y-4 content-enter">
+                {messages.map((msg) => (
+                  <MessageItem
+                    key={msg.id}
+                    message={msg}
+                    language={settings.interfaceLanguage}
+                    onActionClick={handleActionClick}
+                    onSaveNote={handleSaveNote}
+                  />
+                ))}
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>

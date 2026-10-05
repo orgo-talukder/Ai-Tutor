@@ -31,6 +31,11 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import {
+  QuizQuestionSkeleton,
+  TeachBackSkeleton,
+  CanvasSkeleton,
+} from '@/components/skeletons';
 
 interface LearningDrawerPanelProps {
   isOpen: boolean;
@@ -371,8 +376,12 @@ export function LearningDrawerPanel({
 
               {/* Main Workspace Body */}
               <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
-                {canvasContent ? (
-                  <div className="h-full flex flex-col overflow-hidden">
+                {isCanvasLoading && !canvasContent ? (
+                  <div className="flex-1 overflow-y-auto">
+                    <CanvasSkeleton isBn={isBn} />
+                  </div>
+                ) : canvasContent ? (
+                  <div className="h-full flex flex-col overflow-hidden content-enter">
                     {/* MARKDOWN VIEW */}
                     {canvasTab === 'markdown' && (
                       <div className="flex-1 overflow-hidden flex flex-col">
@@ -516,6 +525,13 @@ export function LearningDrawerPanel({
                 </button>
               </form>
 
+              {/* Quiz Loading Skeleton */}
+              {quizLoading && (
+                <div className="pt-2">
+                  <QuizQuestionSkeleton isBn={isBn} />
+                </div>
+              )}
+
               {/* Initial Zero-State */}
               {!quizLoading && quizQuestions.length === 0 && !quizError && (
                 <div className="py-12 text-center space-y-2">
@@ -540,7 +556,7 @@ export function LearningDrawerPanel({
 
               {/* Active Quiz Question */}
               {!quizLoading && quizQuestions.length > 0 && !quizFinished && (
-                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.06] space-y-4">
+                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.06] space-y-4 content-enter">
                   <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 pb-2 border-b border-zinc-200 dark:border-white/[0.06]">
                     <span>
                       {isBn ? 'প্রশ্ন' : 'Question'} {quizIndex + 1} / {quizQuestions.length}
@@ -643,7 +659,7 @@ export function LearningDrawerPanel({
 
               {/* Quiz Scorecard */}
               {quizFinished && (
-                <div className="p-6 rounded-xl bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.06] text-center space-y-3">
+                <div className="p-6 rounded-xl bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.06] text-center space-y-3 content-enter">
                   <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto text-lg font-bold">
                     {quizScore}/{quizQuestions.length}
                   </div>
@@ -715,6 +731,13 @@ export function LearningDrawerPanel({
                 </button>
               </form>
 
+              {/* Teach-Back Loading Skeleton */}
+              {teachBackLoading && (
+                <div className="pt-2">
+                  <TeachBackSkeleton isBn={isBn} />
+                </div>
+              )}
+
               {teachBackError && (
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-600 dark:text-rose-300">
                   {teachBackError}
@@ -722,8 +745,8 @@ export function LearningDrawerPanel({
               )}
 
               {/* Assessment Report */}
-              {teachBackAssessment && (
-                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.06] space-y-3 animate-fadeIn text-xs">
+              {!teachBackLoading && teachBackAssessment && (
+                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/[0.06] space-y-3 content-enter text-xs">
                   <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-white/[0.06]">
                     <div>
                       <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">

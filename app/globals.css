@@ -361,18 +361,105 @@ body {
 }
 
 /* ==========================================================================
-   ANIMATION & SKELETON
+   SKELETON TOKENS & SHIMMER ANIMATIONS (Light & Dark)
    ========================================================================== */
-.skeleton {
-  background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 37%, var(--bg-hover) 63%);
-  background-size: 400% 100%;
-  animation: shimmer 1.4s linear infinite;
-  border-radius: 0.5rem;
+:root,
+:root[data-theme="light"],
+html.light {
+  --skeleton-base:      rgba(20, 20, 40, 0.07);
+  --skeleton-highlight: rgba(20, 20, 40, 0.14);
+  --skeleton-duration:  1.5s;
+  --skeleton-radius:    8px;
 }
 
-@keyframes shimmer {
-  0% { background-position: 100% 0; }
-  100% { background-position: 0 0; }
+:root[data-theme="dark"],
+html.dark {
+  --skeleton-base:      rgba(255, 255, 255, 0.06);
+  --skeleton-highlight: rgba(255, 255, 255, 0.13);
+  --skeleton-duration:  1.5s;
+  --skeleton-radius:    8px;
+}
+
+/* Base Skeleton with GPU-accelerated transform shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--skeleton-base);
+  border-radius: var(--skeleton-radius);
+  pointer-events: none;
+  user-select: none;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--skeleton-highlight) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer var(--skeleton-duration) ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Delayed skeleton fade-in (anti-flicker for fast network) */
+.skeleton-delayed {
+  opacity: 0;
+  animation: skeleton-fade-in 140ms linear 200ms forwards;
+}
+
+@keyframes skeleton-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Smooth Content Enter Transition */
+.content-enter {
+  animation: content-in 220ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+@keyframes content-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Thinking Indicator Shimmer Text */
+.thinking-text {
+  background: linear-gradient(
+    90deg,
+    var(--text-tertiary) 25%,
+    var(--text-primary) 50%,
+    var(--text-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: text-shimmer 1.8s linear infinite;
+}
+
+@keyframes text-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 }
 
 @keyframes pulseGlow {
@@ -390,10 +477,24 @@ body {
 
 /* Reduced Motion Compliance */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  .skeleton::after {
+    animation: none;
+    display: none;
   }
+  .skeleton {
+    animation: skeleton-pulse 2.4s ease-in-out infinite;
+  }
+  .content-enter {
+    animation: content-fade 120ms linear both;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes content-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

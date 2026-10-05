@@ -20,6 +20,8 @@ import {
   Flame,
 } from 'lucide-react';
 import Image from 'next/image';
+import { ChatHistorySkeleton } from './skeletons/ChatHistorySkeleton';
+import { UserCardSkeleton } from './skeletons/UserCardSkeleton';
 
 // Utility to group chats by date categories
 function groupChatsByDate(chats: DbChatSession[], isBn: boolean) {
@@ -75,6 +77,7 @@ interface AppSidebarProps {
   onOpenAuth?: () => void;
   onOpenProfile?: () => void;
   chats?: DbChatSession[];
+  isLoadingChats?: boolean;
   activeChatId?: string | null;
   onSelectChat?: (chatId: string) => void;
   onDeleteChat?: (chatId: string) => void;
@@ -94,13 +97,14 @@ export function AppSidebar({
   onOpenSettings,
   onOpenAuth,
   chats,
+  isLoadingChats = false,
   activeChatId,
   onSelectChat,
   onDeleteChat,
   onRenameChat,
   onPinChat,
 }: AppSidebarProps) {
-  const { user } = useAuth();
+  const { user, loading: isAuthLoading } = useAuth();
   const isBn = language === 'bn';
 
   // Local UI States for Management
@@ -246,128 +250,142 @@ export function AppSidebar({
           </div>
 
           {/* Firestore Saved Chats List with Grouping */}
-          {user && chats && chats.length > 0 && (
+          {user && (
             <div className="space-y-5">
-              {(() => {
-                const { groups, labels } = groupChatsByDate(chats, isBn);
-                return Object.entries(groups).map(([key, groupChats]) => {
-                  if (groupChats.length === 0) return null;
-                  return (
-                    <div key={key} className="space-y-1">
-                      <div className="px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-[0.1em] mb-1">
-                        {labels[key as keyof typeof labels]}
-                      </div>
-                      {groupChats.map((c) => {
-                        const isActive = activeChatId === c.id;
-                        return (
-                          <div
-                            key={c.id}
-                            className={`group relative flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
-                              isActive
-                                ? 'bg-[var(--bg-selected)] text-[var(--text-primary)] shadow-xs font-semibold'
-                                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                onSelectChat?.(c.id);
-                                onClose();
-                              }}
-                              className="flex items-center gap-2.5 min-w-0 flex-1 text-left py-0.5"
-                            >
+              {isLoadingChats ? (
+                <ChatHistorySkeleton isBn={isBn} />
+              ) : chats && chats.length > 0 ? (
+                <div className="space-y-5 content-enter">
+                  {(() => {
+                    const { groups, labels } = groupChatsByDate(chats, isBn);
+                    return Object.entries(groups).map(([key, groupChats]) => {
+                      if (groupChats.length === 0) return null;
+                      return (
+                        <div key={key} className="space-y-1">
+                          <div className="px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-[0.1em] mb-1">
+                            {labels[key as keyof typeof labels]}
+                          </div>
+                          {groupChats.map((c) => {
+                            const isActive = activeChatId === c.id;
+                            return (
                               <div
-                                className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all ${
+                                key={c.id}
+                                className={`group relative flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
                                   isActive
-                                    ? 'bg-[var(--accent)] scale-100'
-                                    : 'bg-transparent scale-0 group-hover:scale-100 group-hover:bg-zinc-400'
-                                }`}
-                              />
-                              <span className="truncate text-[12px]">
-                                {c.title || (isBn ? 'নতুন চ্যাট' : 'New Chat')}
-                              </span>
-                            </button>
-
-                            {/* 3-Dot Dropdown Menu Trigger */}
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuId(activeMenuId === c.id ? null : c.id);
-                                }}
-                                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                                  activeMenuId === c.id
-                                    ? 'bg-[var(--bg-hover)] opacity-100'
-                                    : 'opacity-0 group-hover:opacity-100 hover:bg-[var(--bg-hover)]'
+                                    ? 'bg-[var(--bg-selected)] text-[var(--text-primary)] shadow-xs font-semibold'
+                                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
                                 }`}
                               >
-                                <MoreVertical className="w-3.5 h-3.5" />
-                              </button>
-
-                              {activeMenuId === c.id && (
-                                <div
-                                  className="absolute right-0 top-full mt-1 w-40 py-1.5 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-xl shadow-xl z-50 overflow-hidden backdrop-blur-md animate-fadeIn"
-                                  onClick={(e) => e.stopPropagation()}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onSelectChat?.(c.id);
+                                    onClose();
+                                  }}
+                                  className="flex items-center gap-2.5 min-w-0 flex-1 text-left py-0.5"
                                 >
+                                  <div
+                                    className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all ${
+                                      isActive
+                                        ? 'bg-[var(--accent)] scale-100'
+                                        : 'bg-transparent scale-0 group-hover:scale-100 group-hover:bg-zinc-400'
+                                    }`}
+                                  />
+                                  <span className="truncate text-[12px]">
+                                    {c.title || (isBn ? 'নতুন চ্যাট' : 'New Chat')}
+                                  </span>
+                                </button>
+
+                                {/* 3-Dot Dropdown Menu Trigger */}
+                                <div className="relative">
                                   <button
+                                    type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      onPinChat?.(c.id, !c.isPinned);
-                                      setActiveMenuId(null);
+                                      setActiveMenuId(activeMenuId === c.id ? null : c.id);
                                     }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
+                                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                                      activeMenuId === c.id
+                                        ? 'bg-[var(--bg-hover)] opacity-100'
+                                        : 'opacity-0 group-hover:opacity-100 hover:bg-[var(--bg-hover)]'
+                                    }`}
                                   >
-                                    <Pin className={`w-3.5 h-3.5 ${c.isPinned ? 'fill-current text-[var(--accent)]' : ''}`} />
-                                    <span>{c.isPinned ? (isBn ? 'আনপিন' : 'Unpin') : (isBn ? 'পিন করুন' : 'Pin Chat')}</span>
+                                    <MoreVertical className="w-3.5 h-3.5" />
                                   </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setRenameChatId(c.id);
-                                      setRenameTitle(c.title);
-                                      setActiveMenuId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
-                                  >
-                                    <Pencil className="w-3.5 h-3.5" />
-                                    <span>{isBn ? 'নাম পরিবর্তন' : 'Rename'}</span>
-                                  </button>
-                                  <div className="h-px bg-[var(--border-subtle)] my-1" />
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setDeleteChatId(c.id);
-                                      setActiveMenuId(null);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-rose-500 hover:bg-rose-500/10 transition-colors"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    <span>{isBn ? 'মুছে ফেলুন' : 'Delete'}</span>
-                                  </button>
+
+                                  {activeMenuId === c.id && (
+                                    <div
+                                      className="absolute right-0 top-full mt-1 w-40 py-1.5 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-xl shadow-xl z-50 overflow-hidden backdrop-blur-md animate-fadeIn"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onPinChat?.(c.id, !c.isPinned);
+                                          setActiveMenuId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
+                                      >
+                                        <Pin className={`w-3.5 h-3.5 ${c.isPinned ? 'fill-current text-[var(--accent)]' : ''}`} />
+                                        <span>{c.isPinned ? (isBn ? 'আনপিন' : 'Unpin') : (isBn ? 'পিন করুন' : 'Pin Chat')}</span>
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setRenameChatId(c.id);
+                                          setRenameTitle(c.title);
+                                          setActiveMenuId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
+                                      >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                        <span>{isBn ? 'নাম পরিবর্তন' : 'Rename'}</span>
+                                      </button>
+                                      <div className="h-px bg-[var(--border-subtle)] my-1" />
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteChatId(c.id);
+                                          setActiveMenuId(null);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-rose-500 hover:bg-rose-500/10 transition-colors"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        <span>{isBn ? 'মুছে ফেলুন' : 'Delete'}</span>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                });
-              })()}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              ) : (
+                <div className="px-3 py-4 text-center rounded-2xl bg-[var(--bg-canvas)] border border-[var(--border-subtle)] content-enter">
+                  <p className="text-[11px] text-[var(--text-tertiary)] leading-relaxed">
+                    {isBn ? 'এখনও কোনো সংরক্ষিত চ্যাট নেই' : 'No saved conversations yet'}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Bottom Sidebar: User Profile Card + Streak Badge */}
         <div className="p-3 border-t border-[var(--border-subtle)] bg-[var(--bg-canvas)]/50">
-          {user ? (
+          {isAuthLoading ? (
+            <UserCardSkeleton isBn={isBn} />
+          ) : user ? (
             <button
               onClick={() => {
                 onOpenSettings();
                 onClose();
               }}
-              className="group w-full flex items-center justify-between p-2.5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--accent)]/40 hover:bg-[var(--bg-hover)] transition-all duration-300 cursor-pointer shadow-2xs"
+              className="group w-full flex items-center justify-between p-2.5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--accent)]/40 hover:bg-[var(--bg-hover)] transition-all duration-300 cursor-pointer shadow-2xs content-enter"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="relative shrink-0">
@@ -408,7 +426,7 @@ export function AppSidebar({
                 onOpenAuth?.();
                 onClose();
               }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--accent)] hover:bg-[var(--brand-600)] text-white text-[12px] font-bold transition-all duration-200 cursor-pointer shadow-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--accent)] hover:bg-[var(--brand-600)] text-white text-[12px] font-bold transition-all duration-200 cursor-pointer shadow-sm content-enter"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>{isBn ? 'সাইন-ইন করুন' : 'Sign In'}</span>
