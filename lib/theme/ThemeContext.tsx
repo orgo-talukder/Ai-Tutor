@@ -11,7 +11,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: 'system',
+  theme: 'dark',
   resolvedTheme: 'dark',
   setTheme: () => {},
 });
@@ -20,7 +20,7 @@ const STORAGE_KEY = 'thinkwise-theme';
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
+  defaultTheme = 'dark',
 }: {
   children: React.ReactNode;
   defaultTheme?: Theme;
@@ -88,6 +88,12 @@ export function ThemeProvider({
   }, [theme]);
 
   const setTheme = useCallback((newTheme: Theme) => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('theme-transition');
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transition');
+      }, 300);
+    }
     setThemeState(newTheme);
     try {
       localStorage.setItem(STORAGE_KEY, newTheme);

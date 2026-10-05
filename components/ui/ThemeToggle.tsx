@@ -19,9 +19,7 @@ export function ThemeToggle({ variant = 'button', className = '' }: ThemeToggleP
     () => false
   );
 
-  if (!mounted) {
-    return <div className="h-9 w-9 rounded-xl bg-transparent" />;
-  }
+  const currentTheme = mounted ? theme : 'dark';
 
   if (variant === 'segmented') {
     const options = [

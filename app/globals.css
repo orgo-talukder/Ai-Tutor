@@ -61,63 +61,9 @@
 }
 
 /* ==========================================================================
-   SEMANTIC TOKENS: LIGHT THEME
+   SEMANTIC TOKENS: DARK THEME (DEFAULT :root)
    ========================================================================== */
 :root,
-:root[data-theme="light"],
-html.light {
-  color-scheme: light;
-
-  /* Surfaces */
-  --bg-canvas:     var(--n-25);
-  --bg-sidebar:    var(--n-50);
-  --bg-surface:    var(--n-0);
-  --bg-elevated:   var(--n-0);
-  --bg-hover:      rgba(20, 20, 40, 0.05);
-  --bg-active:     rgba(20, 20, 40, 0.08);
-  --bg-selected:   var(--brand-50);
-  --bg-overlay:    rgba(14, 14, 19, 0.45);
-
-  /* Text */
-  --text-primary:   var(--n-900);
-  --text-secondary: var(--n-600);
-  --text-tertiary:  var(--n-500);
-  --text-disabled:  var(--n-400);
-  --text-on-brand:  #FFFFFF;
-  --text-link:      var(--brand-600);
-
-  /* Borders */
-  --border-subtle:  rgba(20, 20, 40, 0.06);
-  --border-default: rgba(20, 20, 40, 0.10);
-  --border-strong:  rgba(20, 20, 40, 0.18);
-  --border-focus:   var(--brand-500);
-
-  /* Brand roles */
-  --accent:         var(--brand-500);
-  --accent-hover:   var(--brand-600);
-  --accent-subtle:  rgba(107, 118, 245, 0.10);
-  --accent-glow:    rgba(107, 118, 245, 0.25);
-
-  /* Chat */
-  --bubble-user-bg:   var(--n-100);
-  --bubble-user-text: var(--text-primary);
-  --code-bg:          #F6F6FA;
-  --code-border:      var(--border-default);
-
-  /* Shadows */
-  --shadow-xs: 0 1px 2px rgba(20,20,40,0.05);
-  --shadow-sm: 0 1px 3px rgba(20,20,40,0.08), 0 1px 2px rgba(20,20,40,0.04);
-  --shadow-md: 0 4px 12px rgba(20,20,40,0.08), 0 2px 4px rgba(20,20,40,0.04);
-  --shadow-lg: 0 12px 32px rgba(20,20,40,0.12), 0 4px 8px rgba(20,20,40,0.06);
-  --shadow-composer: 0 2px 6px rgba(20,20,40,0.05), 0 12px 32px rgba(20,20,40,0.08);
-
-  --scrollbar-thumb: rgba(20,20,40,0.18);
-  --selection-bg:    rgba(107,118,245,0.22);
-}
-
-/* ==========================================================================
-   SEMANTIC TOKENS: DARK THEME (Refined, no pure #000)
-   ========================================================================== */
 :root[data-theme="dark"],
 html.dark {
   color-scheme: dark;
@@ -170,6 +116,61 @@ html.dark {
 }
 
 /* ==========================================================================
+   SEMANTIC TOKENS: LIGHT THEME (Scoped to [data-theme="light"] / .light)
+   ========================================================================== */
+:root[data-theme="light"],
+html.light,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg-canvas:     var(--n-25);
+  --bg-sidebar:    var(--n-50);
+  --bg-surface:    var(--n-0);
+  --bg-elevated:   var(--n-0);
+  --bg-hover:      rgba(20, 20, 40, 0.05);
+  --bg-active:     rgba(20, 20, 40, 0.08);
+  --bg-selected:   var(--brand-50);
+  --bg-overlay:    rgba(14, 14, 19, 0.45);
+
+  /* Text */
+  --text-primary:   var(--n-900);
+  --text-secondary: var(--n-600);
+  --text-tertiary:  var(--n-500);
+  --text-disabled:  var(--n-400);
+  --text-on-brand:  #FFFFFF;
+  --text-link:      var(--brand-600);
+
+  /* Borders */
+  --border-subtle:  rgba(20, 20, 40, 0.06);
+  --border-default: rgba(20, 20, 40, 0.10);
+  --border-strong:  rgba(20, 20, 40, 0.18);
+  --border-focus:   var(--brand-500);
+
+  /* Brand roles */
+  --accent:         var(--brand-500);
+  --accent-hover:   var(--brand-600);
+  --accent-subtle:  rgba(107, 118, 245, 0.10);
+  --accent-glow:    rgba(107, 118, 245, 0.25);
+
+  /* Chat */
+  --bubble-user-bg:   var(--n-100);
+  --bubble-user-text: var(--text-primary);
+  --code-bg:          #F6F6FA;
+  --code-border:      var(--border-default);
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(20,20,40,0.05);
+  --shadow-sm: 0 1px 3px rgba(20,20,40,0.08), 0 1px 2px rgba(20,20,40,0.04);
+  --shadow-md: 0 4px 12px rgba(20,20,40,0.08), 0 2px 4px rgba(20,20,40,0.04);
+  --shadow-lg: 0 12px 32px rgba(20,20,40,0.12), 0 4px 8px rgba(20,20,40,0.06);
+  --shadow-composer: 0 2px 6px rgba(20,20,40,0.05), 0 12px 32px rgba(20,20,40,0.08);
+
+  --scrollbar-thumb: rgba(20,20,40,0.18);
+  --selection-bg:    rgba(107,118,245,0.22);
+}
+
+/* ==========================================================================
    GLOBAL RESET & TYPOGRAPHY
    ========================================================================== */
 html,
@@ -182,7 +183,14 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Temporary theme switch transition class applied on click */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 260ms ease, border-color 260ms ease, color 260ms ease !important;
 }
 
 /* Bengali Typography: taller line-height, zero letter-spacing */
@@ -438,28 +446,61 @@ html.dark {
   }
 }
 
-/* Thinking Indicator Shimmer Text */
-.thinking-text {
+/* ==========================================================================
+   AI THINKING ANIMATIONS (Quiet, inline, modern ChatGPT/Claude/Gemini style)
+   ========================================================================== */
+.thinking-label {
   background: linear-gradient(
     90deg,
-    var(--text-tertiary) 25%,
+    var(--text-tertiary) 0%,
+    var(--text-tertiary) 35%,
     var(--text-primary) 50%,
-    var(--text-tertiary) 75%
+    var(--text-tertiary) 65%,
+    var(--text-tertiary) 100%
   );
-  background-size: 200% 100%;
+  background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
-  animation: text-shimmer 1.8s linear infinite;
+  animation: thinking-shimmer 1.8s linear infinite;
 }
 
-@keyframes text-shimmer {
+@keyframes thinking-shimmer {
   from {
     background-position: 100% 0;
   }
   to {
     background-position: -100% 0;
   }
+}
+
+.thinking-icon {
+  animation: thinking-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes thinking-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.thinking-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.thinking-collapse[data-open="false"] {
+  grid-template-rows: 0fr;
+}
+
+.thinking-collapse > div {
+  overflow: hidden;
+  min-height: 0;
 }
 
 @keyframes pulseGlow {
@@ -486,6 +527,19 @@ html.dark {
   }
   .content-enter {
     animation: content-fade 120ms linear both;
+  }
+  .thinking-label {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--text-secondary);
+  }
+  .thinking-icon {
+    animation: none;
+    opacity: 0.8;
+  }
+  .thinking-collapse {
+    transition: none;
   }
 }
 
