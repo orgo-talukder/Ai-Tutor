@@ -318,7 +318,7 @@ export function Composer({
         )
       );
     }
-  }, []);
+  }, [isBn]);
 
   // Add files to attachments
   const handleAddFiles = useCallback(
@@ -478,6 +478,9 @@ export function Composer({
     }
 
     if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.nativeEvent.isComposing) {
+        return; // Ignore Enter during IME composition for Bengali typing
+      }
       e.preventDefault();
       handleSubmit();
     }
@@ -517,8 +520,8 @@ export function Composer({
   };
 
   const modelShortLabels: Record<GeminiModelId, string> = {
-    'gemini-2.5-flash': 'ThinkWase Fast',
-    'gemini-3.7-flash': 'ThinkWase Pro',
+    'gemini-2.5-flash': 'ThinkWise Fast',
+    'gemini-3.7-flash': 'ThinkWise Pro',
   };
 
   const effortLabels: Record<ThinkingLevelId, { en: string; bn: string }> = {
@@ -530,7 +533,7 @@ export function Composer({
   const showPlaceholder = input.length === 0 && selectedMentions.length === 0;
 
   return (
-    <div className="w-full max-w-[760px] mx-auto px-2.5 sm:px-4 pb-3 sm:pb-5">
+    <div className="w-full max-w-[760px] mx-auto px-2.5 sm:px-4 pb-2.5 sm:pb-5 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
       {/* 4 Separate Hidden Native File Inputs */}
       <input
         type="file"
@@ -697,7 +700,35 @@ export function Composer({
               />
             </div>
 
-            {/* 3. Control 2: [Gemini 3.8 Flash · Medium ▾] ModelPickerPopover */}
+            {/* 2. Socratic vs Quick Answer Mode Pill per §10.5 & §11.3 */}
+            <div className="inline-flex items-center p-0.5 bg-zinc-100 dark:bg-white/[0.05] rounded-full border border-zinc-200/80 dark:border-white/[0.08] text-[11px] shrink-0">
+              <button
+                type="button"
+                onClick={() => onModeChange('socratic')}
+                className={`px-2 sm:px-2.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
+                  currentMode === 'socratic'
+                    ? 'bg-white dark:bg-[#1E1E24] text-zinc-900 dark:text-white shadow-xs font-semibold'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+                title={isBn ? 'সক্রেটিক টিউটর মোড: ধাপে ধাপে নির্দেশনা' : 'Socratic Tutor Mode: Guides step-by-step'}
+              >
+                {isBn ? 'টিউটর' : 'Tutor'}
+              </button>
+              <button
+                type="button"
+                onClick={() => onModeChange('worked_solution')}
+                className={`px-2 sm:px-2.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
+                  currentMode === 'worked_solution'
+                    ? 'bg-white dark:bg-[#1E1E24] text-zinc-900 dark:text-white shadow-xs font-semibold'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+                title={isBn ? 'সরাসরি উত্তর: পূর্ণাঙ্গ সমাধান' : 'Quick Answer: Direct worked solution'}
+              >
+                {isBn ? 'দ্রুত উত্তর' : 'Quick'}
+              </button>
+            </div>
+
+            {/* 3. Control 2: [ThinkWise Fast · Medium ▾] ModelPickerPopover */}
             <div className="relative inline-flex items-center shrink-0">
               <button
                 type="button"
@@ -716,7 +747,7 @@ export function Composer({
                 }`}
               >
                 <span className="font-mono font-semibold truncate max-w-[110px] sm:max-w-none">
-                  {modelShortLabels[selectedModel] || 'ThinkWase Fast'}
+                  {modelShortLabels[selectedModel] || 'ThinkWise Fast'}
                 </span>
                 <span className="opacity-70 font-normal hidden sm:inline truncate max-w-[50px] sm:max-w-none">
                   {isBn ? effortLabels[selectedThinkingLevel]?.bn : effortLabels[selectedThinkingLevel]?.en}
@@ -737,7 +768,7 @@ export function Composer({
           </div>
 
           {/* Right: Dynamic Mic / Send Button with clean separator line */}
-          <div className="shrink-0 flex items-center pl-2.5 sm:pl-3 border-l border-zinc-200/60 dark:border-white/[0.08]">
+          <div className="shrink-0 flex items-center pl-2 sm:pl-3 border-l border-zinc-200/60 dark:border-white/[0.08]">
             {isStreaming ? (
               <button
                 type="button"
@@ -752,7 +783,7 @@ export function Composer({
               <button
                 type="button"
                 onClick={() => handleSubmit()}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-sm cursor-pointer shrink-0 animate-fadeIn"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-[var(--accent)] hover:bg-[var(--brand-600)] text-white shadow-xs cursor-pointer shrink-0 animate-fadeIn"
                 aria-label={isBn ? 'মেসেজ পাঠান' : 'Send message'}
                 title={isBn ? 'মেসেজ পাঠান' : 'Send message'}
               >
@@ -776,6 +807,13 @@ export function Composer({
           </div>
         </div>
       </div>
+
+      {/* Footer Disclaimer per §11.7 */}
+      <p className="text-[10px] sm:text-[11px] text-[var(--text-tertiary)] text-center mt-1.5 select-none">
+        {isBn
+          ? 'ThinkWise AI ভুল করতে পারে। গুরুত্বপূর্ণ তথ্য যাচাই করুন।'
+          : 'ThinkWise AI can make mistakes. Verify important information.'}
+      </p>
     </div>
   );
 }

@@ -5,7 +5,6 @@ import Markdown from 'react-markdown';
 import { ChatMessage, AppLanguage } from '@/lib/types';
 import {
   Sparkles,
-  User,
   Copy,
   Check,
   Bookmark,
@@ -57,7 +56,7 @@ export function MessageItem({
           <div className="flex items-center gap-1.5 text-[11px] text-slate-300 dark:text-sky-100 mb-1">
             <span>{isBn ? 'আপনি' : 'You'}</span>
             <span aria-hidden="true">·</span>
-            <span>{formattedTime}</span>
+            <span suppressHydrationWarning>{formattedTime}</span>
           </div>
           <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</div>
         </div>
@@ -80,7 +79,7 @@ export function MessageItem({
             {isBn ? 'এআই টিউটর' : 'AI Tutor'}
           </span>
           <span aria-hidden="true">·</span>
-          <span>{formattedTime}</span>
+          <span suppressHydrationWarning>{formattedTime}</span>
           {message.mode && (
             <>
               <span aria-hidden="true">·</span>
@@ -114,7 +113,6 @@ export function MessageItem({
                 <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
                 <span>{isBn ? 'সহজ উপমা' : 'Explain Simpler'}</span>
               </button>
-
               <button
                 onClick={() => onActionClick('worked', message.content)}
                 className="flex items-center gap-1 px-2.5 py-1 text-slate-600 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-800/70 rounded-md transition-colors"
@@ -123,7 +121,6 @@ export function MessageItem({
                 <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
                 <span>{isBn ? 'ধাপে সমাধান' : 'Worked Derivation'}</span>
               </button>
-
               <button
                 onClick={() => onActionClick('quiz', message.content)}
                 className="flex items-center gap-1 px-2.5 py-1 text-slate-600 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-800/70 rounded-md transition-colors"
@@ -132,7 +129,6 @@ export function MessageItem({
                 <HelpCircle className="w-3.5 h-3.5 text-sky-500" />
                 <span>{isBn ? 'অনুশীলন কুইজ' : 'Quiz Me'}</span>
               </button>
-
               <button
                 onClick={() => onActionClick('teach_back', message.content)}
                 className="flex items-center gap-1 px-2.5 py-1 text-slate-600 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-800/70 rounded-md transition-colors"
@@ -141,7 +137,6 @@ export function MessageItem({
                 <Award className="w-3.5 h-3.5 text-indigo-500" />
                 <span>{isBn ? 'নিজে বোঝাও' : 'Teach-Back'}</span>
               </button>
-
               <div className="ml-auto flex items-center gap-1 text-slate-400 dark:text-slate-500">
                 <button
                   onClick={handleSave}
@@ -150,7 +145,6 @@ export function MessageItem({
                 >
                   {saved ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Bookmark className="w-3.5 h-3.5" />}
                 </button>
-
                 <button
                   onClick={handleCopy}
                   className="p-1.5 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"

@@ -30,6 +30,7 @@ import {
   Trash,
 } from 'lucide-react';
 import { useAuth } from '@/lib/firebase/authContext';
+import { useTheme } from '@/lib/theme/ThemeContext';
 import Image from 'next/image';
 
 interface SettingsCenterModalProps {
@@ -63,6 +64,7 @@ export function SettingsCenterModal({
   onClearSession,
 }: SettingsCenterModalProps) {
   const { user, logout } = useAuth();
+  const { setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState<SettingsSectionId>('account');
   const [mobileDetailView, setMobileDetailView] = useState<boolean>(false);
 
@@ -403,7 +405,10 @@ export function SettingsCenterModal({
                         <button
                           key={themeOpt}
                           type="button"
-                          onClick={() => onUpdateSettings({ theme: themeOpt })}
+                          onClick={() => {
+                            setTheme(themeOpt);
+                            onUpdateSettings({ theme: themeOpt });
+                          }}
                           className={`p-3.5 rounded-2xl border text-center font-medium text-xs sm:text-sm transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5 ${
                             isSelected
                               ? 'bg-zinc-900 text-white dark:bg-white dark:text-black border-transparent shadow-sm'

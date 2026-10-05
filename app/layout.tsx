@@ -23,9 +23,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark h-full scroll-smooth">
+    <html lang="en" suppressHydrationWarning className="h-full scroll-smooth">
       <body
-        className="min-h-full flex flex-col font-sans antialiased bg-[#0A0A0B] text-[#F5F5F5] selection:bg-[#7C8CFF]/20 selection:text-[#7C8CFF]"
+        className="min-h-full flex flex-col font-sans antialiased bg-[var(--bg-canvas)] text-[var(--text-primary)] transition-colors duration-200"
         suppressHydrationWarning
       >
         <AppProviders>{children}</AppProviders>

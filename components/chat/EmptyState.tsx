@@ -1,89 +1,173 @@
 'use client';
 
-import React from 'react';
-import { AppLanguage } from '@/lib/types';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import React, { useSyncExternalStore } from 'react';
+import { useAuth } from '@/lib/firebase/authContext';
+import { Calculator, Atom, Dna, Code2, Sparkles, ArrowRight } from 'lucide-react';
 
 interface EmptyStateProps {
-  language: AppLanguage;
-  onSelectSuggestion: (text: string) => void;
+  language: 'bn' | 'en';
+  onSelectSuggestion: (prompt: string) => void;
 }
 
+const emptySubscribe = () => () => {};
+
 export function EmptyState({ language, onSelectSuggestion }: EmptyStateProps) {
+  const { user } = useAuth();
   const isBn = language === 'bn';
+
+  // Client-safe hydration snapshot: false on SSR, true on client
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
+  const getGreeting = () => {
+    if (!isClient) {
+      return isBn ? 'স্বাগতম 👋' : 'Welcome 👋';
+    }
+    const hour = new Date().getHours();
+    const name = user?.displayName ? ` ${user.displayName.split(' ')[0]}` : '';
+    if (isBn) {
+      if (hour >= 5 && hour < 12) return `শুভ সকাল${name} 👋`;
+      if (hour >= 12 && hour < 17) return `শুভ দুপুর${name} 👋`;
+      if (hour >= 17 && hour < 22) return `শুভ সন্ধ্যা${name} 👋`;
+      return `শুভ রাত্রি${name} 👋`;
+    }
+    if (hour >= 5 && hour < 12) return `Good morning${name} 👋`;
+    if (hour >= 12 && hour < 17) return `Good afternoon${name} 👋`;
+    if (hour >= 17 && hour < 22) return `Good evening${name} 👋`;
+    return `Hello${name} 👋`;
+  };
 
   const suggestions = isBn
     ? [
         {
-          label: 'সালোকসংশ্লেষণ সহজে বুঝাও',
-          query: 'সালোকসংশ্লেষণ (Photosynthesis) কীভাবে ঘটে এবং উদ্ভিদের খাদ্য তৈরিতে আলোর ভূমিকা কী—একটি সহজ বাস্তব জীবনের উপমায় বুঝিয়ে বলো।',
-        },
-        {
-          label: 'দ্বিঘাত সমীকরণ কীভাবে সমাধান করে?',
+          subject: 'গণিত',
+          icon: Calculator,
+          color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+          title: 'দ্বিঘাত সমীকরণ সমাধান',
+          desc: 'ax² + bx + c = 0 সূত্রের ধাপে ধাপে স্পষ্ট সমাধান',
           query: 'দ্বিঘাত সমীকরণ (ax² + bx + c = 0) কীভাবে ধাপে ধাপে সমাধান করতে হয় তা সূত্রের স্পষ্ট ব্যাখ্যা সহ দেখাও।',
         },
         {
-          label: 'নিউটনের ৩য় সূত্র ব্যাখ্যা করো',
+          subject: 'পদার্থবিজ্ঞান',
+          icon: Atom,
+          color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+          title: 'নিউটনের ৩য় গতিসূত্র',
+          desc: 'ক্রিয়া-প্রতিক্রিয়া বল কেন একে অপরকে কাটাকাটি করে না',
           query: 'নিউটনের ৩য় গতিসূত্র (Newton’s 3rd Law) কীভাবে কাজ করে এবং ক্রিয়া-প্রতিক্রিয়া বল কেন একে অপরকে কাটাকাটি করে না?',
         },
         {
-          label: 'পাইথনে রিকার্শন (Recursion) বোঝাও',
+          subject: 'জীববিজ্ঞান',
+          icon: Dna,
+          color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+          title: 'সালোকসংশ্লেষণ সহজে বুঝাও',
+          desc: 'আলোর ভূমিকা ও ক্লোরোপ্লাস্ট প্রক্রিয়ার সহজ বাস্তব উপমা',
+          query: 'সালোকসংশ্লেষণ (Photosynthesis) কীভাবে ঘটে এবং উদ্ভিদের খাদ্য তৈরিতে আলোর ভূমিকা কী—একটি সহজ বাস্তব জীবনের উপমায় বুঝিয়ে বলো।',
+        },
+        {
+          subject: 'প্রোগ্রামিং',
+          icon: Code2,
+          color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+          title: 'পাইথনে রিকার্শন (Recursion)',
+          desc: 'কল-স্ট্যাক কীভাবে কাজ করে তা সাধারণ উদাহরণ দিয়ে বুঝাও',
           query: 'কম্পিউটার সায়েন্সে রিকার্শন (Recursion) কীভাবে কাজ করে? পাইথনে একটি সাধারণ উদাহরণ দিয়ে কল-স্ট্যাক বুঝিয়ে দাও।',
         },
       ]
     : [
         {
-          label: 'Explain photosynthesis simply',
-          query: 'Explain photosynthesis and the light-dependent reaction using a simple, clear real-life analogy.',
-        },
-        {
-          label: 'Help me understand quadratic equations',
+          subject: 'Mathematics',
+          icon: Calculator,
+          color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+          title: 'Derive Quadratic Formula',
+          desc: 'Step-by-step intuition for ax² + bx + c = 0',
           query: 'Derive and explain the quadratic formula ax² + bx + c = 0 step by step with an intuitive verification check.',
         },
         {
-          label: "Teach me Newton's 3rd Law",
+          subject: 'Physics',
+          icon: Atom,
+          color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+          title: "Newton's 3rd Law of Motion",
+          desc: 'Why action & reaction pairs never cancel each other',
           query: "Why do action and reaction pairs never cancel each other out in Newton's Third Law of Motion?",
         },
         {
-          label: 'Explain recursion in Python',
+          subject: 'Biology',
+          icon: Dna,
+          color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+          title: 'Photosynthesis Mechanism',
+          desc: 'Light reaction explained with an everyday analogy',
+          query: 'Explain photosynthesis and the light-dependent reaction using a simple, clear real-life analogy.',
+        },
+        {
+          subject: 'Programming',
+          icon: Code2,
+          color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+          title: 'Recursion & Call Stack',
+          desc: 'How recursive calls behave under the hood in Python',
           query: 'How does recursion work under the hood in Python with the call stack? Explain with a clean example.',
         },
       ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[45vh] px-3 sm:px-4 max-w-lg mx-auto my-auto animate-fadeIn py-6 sm:py-8 select-none">
-      {/* Small Elegant AI Tutor Icon */}
-      <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200/90 dark:border-white/[0.08] flex items-center justify-center text-[#7C8CFF] mb-3.5 shadow-2xs">
-        <Sparkles className="w-5 h-5" />
+    <div className="relative flex flex-col items-center justify-center px-3 sm:px-6 max-w-2xl mx-auto my-auto py-2 sm:py-6 select-none animate-fadeIn">
+      {/* Background Radial Glow Effect */}
+      <div
+        className="absolute -top-12 left-1/2 -translate-x-1/2 w-[340px] sm:w-[500px] h-[260px] sm:h-[320px] rounded-full pointer-events-none opacity-40 dark:opacity-30 blur-[90px]"
+        style={{
+          background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Floating Logo Badge */}
+      <div className="relative z-10 w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C86FF] to-[#6B76F5] flex items-center justify-center text-white mb-3.5 shadow-md shadow-[#6B76F5]/25">
+        <Sparkles className="w-6 h-6" />
       </div>
 
-      {/* Main Conversational Headline */}
-      <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white mb-1.5 text-center">
-        {isBn ? 'শিখতে চান? প্রশ্ন করুন।' : 'Ready to learn? Ask a question.'}
+      {/* Personalized Greeting with Hydration Guard */}
+      <h1
+        suppressHydrationWarning
+        className="relative z-10 text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)] mb-1 text-center"
+      >
+        {getGreeting()}
       </h1>
 
-      {/* Supporting Guidance */}
-      <p className="text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mb-6 text-center leading-relaxed">
+      {/* Subtitle */}
+      <p className="relative z-10 text-xs sm:text-[13px] text-[var(--text-secondary)] max-w-md mx-auto mb-6 text-center leading-relaxed">
         {isBn
-          ? 'গণিত, বিজ্ঞান, কোডিং বা যেকোনো বিষয় যা আপনি গভীরভাবে বুঝতে চান—আমাকে জিজ্ঞাসা করুন।'
-          : 'Ask about mathematics, physics, biology, programming, or any concept you want to genuinely master.'}
+          ? 'আজ কী শিখতে চান? গণিত, বিজ্ঞান, কোডিং বা যেকোনো বিষয়ে প্রশ্ন করুন।'
+          : 'What would you like to master today? Ask about mathematics, physics, biology, or coding.'}
       </p>
 
-      {/* Compact, Lightweight Prompt Suggestions */}
-      <div className="w-full flex flex-col gap-2">
-        {suggestions.map((item, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => onSelectSuggestion(item.query)}
-            className="group w-full min-h-[42px] px-3.5 py-2.5 rounded-xl bg-white hover:bg-zinc-50 dark:bg-[#121215] dark:hover:bg-[#18181C] border border-zinc-200/80 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/[0.16] transition-all flex items-center justify-between text-left shadow-2xs cursor-pointer"
-          >
-            <span className="text-xs sm:text-[13px] font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
-              {item.label}
-            </span>
-            <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#7C8CFF] group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-          </button>
-        ))}
+      {/* 2x2 Suggestion Cards Grid */}
+      <div className="relative z-10 w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {suggestions.map((item, idx) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => onSelectSuggestion(item.query)}
+              className="group w-full p-3 sm:p-3.5 rounded-2xl bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border-default)] hover:border-[var(--accent)]/50 transition-all duration-200 flex flex-col justify-between text-left shadow-2xs hover:shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-[0.99]"
+            >
+              <div className="flex items-center justify-between w-full mb-1.5">
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${item.color}`}>
+                  <Icon className="w-3 h-3" />
+                  <span>{item.subject}</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <h2 className="text-xs sm:text-[13px] font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-0.5">
+                {item.title}
+              </h2>
+              <p className="text-[11px] text-[var(--text-secondary)] line-clamp-1">
+                {item.desc}
+              </p>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

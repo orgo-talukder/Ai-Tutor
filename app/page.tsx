@@ -607,8 +607,10 @@ export default function RedesignedTutorApp() {
     }
   };
 
+  const activeChat = savedChats.find((c) => c.id === activeChatId);
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0A0A0B] text-[#F5F5F5] font-sans antialiased selection:bg-[#7C8CFF]/20 selection:text-[#7C8CFF]">
+    <div className="flex h-screen h-[100dvh] max-h-[100dvh] w-screen overflow-hidden bg-[var(--bg-canvas)] text-[var(--text-primary)] font-sans antialiased selection:bg-[var(--selection-bg)]">
       {/* 1. App Sidebar */}
       <AppSidebar
         isOpen={isSidebarOpen}
@@ -633,7 +635,7 @@ export default function RedesignedTutorApp() {
       />
 
       {/* 2. Main Chat Viewport */}
-      <div className="flex-1 flex flex-col min-w-0 md:pl-[270px] relative h-full">
+      <div className="flex-1 flex flex-col min-w-0 md:pl-[280px] relative h-full max-h-full overflow-hidden">
         {/* Top Bar */}
         <AppTopBar
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
@@ -641,10 +643,11 @@ export default function RedesignedTutorApp() {
           onNewChat={handleNewChat}
           onOpenAuth={() => setIsAuthOpen(true)}
           onOpenProfile={() => setIsProfileOpen(true)}
+          chatTitle={activeChat?.title}
         />
 
         {/* Chat Stream Viewport */}
-        <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 flex flex-col justify-between">
+        <main className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 py-2 sm:py-4 flex flex-col justify-between">
           <div className="w-full max-w-[760px] mx-auto flex-1 flex flex-col justify-start space-y-4">
             {messages.length === 0 ? (
               <EmptyState
